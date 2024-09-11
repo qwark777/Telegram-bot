@@ -14,3 +14,6 @@ try:
                 print(db)
 except Error as e:
     print(e)
+
+async def insert_database(row, data):
+    pass
