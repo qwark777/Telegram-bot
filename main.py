@@ -18,14 +18,17 @@ async def main():
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     await bot.delete_webhook(drop_pending_updates=True)
 
+
 @router.message(Command("start"))
 async def start_handler(msg: Message):
     await msg.answer("Привет! Я помогу тебе узнать твой ID, просто отправь мне любое сообщение")
+
+
 @router.message()
 async def message_handler(msg: Message):
     await msg.answer(f"Твой ID: {msg.from_user.id}")
 
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     asyncio.run(main())
-
