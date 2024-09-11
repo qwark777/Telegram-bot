@@ -15,5 +15,6 @@ try:
 except Error as e:
     print(e)
 
+class User_info
 async def insert_database(row, data):
     pass
