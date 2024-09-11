@@ -8,12 +8,10 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 router = Router()
-
+bot = Bot(token="7061086759:AAF_s5oDahOFyjojIVMTGnyU-BEJjxEkgdA")
+dp = Dispatcher(storage=MemoryStorage())
 
 async def main():
-    bot = Bot(token="7061086759:AAF_s5oDahOFyjojIVMTGnyU-BEJjxEkgdA")
-
-    dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(router)
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     await bot.delete_webhook(drop_pending_updates=True)
@@ -21,8 +19,8 @@ async def main():
 
 @router.message(Command("start"))
 async def start_handler(msg: Message):
-    await msg.answer("Привет! Я помогу тебе узнать твой ID, просто отправь мне любое сообщение")
-
+    await msg.answer("Сообщение приветствия, чел отправляет свое имя")
+    
 
 @router.message()
 async def message_handler(msg: Message):
