@@ -1,14 +1,16 @@
-import mysql.connector
-from mysql.connector import Error
+from getpass import getpass
+from mysql.connector import connect, Error
 
-def create_connection(host_name, user_name, user_password):
-    connection = None
-    try:
-        connection = mysql.connector.connect(
-            host=host_name,
-            user=user_name,
-            passwd=user_password
-        )
-        print("Connection to MySQL DB successful")
-    except Error as e:
-        print(f"The error '{e}' occurred")
+try:
+    with connect(
+        host="localhost",
+        user=input("Введите имя пользователя: "),
+        password=input("Введите пароль: "),
+    ) as connection:
+        show_db_query = "SHOW DATABASES"
+        with connection.cursor() as cursor:
+            cursor.execute(show_db_query)
+            for db in cursor:
+                print(db)
+except Error as e:
+    print(e)
