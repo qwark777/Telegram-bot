@@ -1,15 +1,31 @@
-import telebot
 import asyncio
+import logging
 
-@bot.message_handler(content_types=['text'])
-async def get_text_messages(message):
-    if message.text == "Привет":
-        bot.send_message(message.from_user.id, "соси хуй Леша")
-    elif message.text == "/help":
-        bot.send_message(message.from_user.id, "Напиши привет")
-    else:
-        bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help.")
+from aiogram import Bot, Dispatcher, Router
+from aiogram.enums.parse_mode import ParseMode
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.filters import Command
+from aiogram.types import Message
+router = Router()
 
 
-bot = telebot.TeleBot("7061086759:AAF_s5oDahOFyjojIVMTGnyU-BEJjxEkgdA")
-bot.polling(none_stop=True, interval=0)
+
+
+async def main():
+    bot = Bot(token="7061086759:AAF_s5oDahOFyjojIVMTGnyU-BEJjxEkgdA")
+
+    dp = Dispatcher(storage=MemoryStorage())
+    dp.include_router(router)
+    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+    await bot.delete_webhook(drop_pending_updates=True)
+
+
+@router.message(Command("start"))
+async def start_handler(msg: Message):
+    await msg.answer("Привет! Я помогу тебе узнать твой ID, просто отправь мне любое сообщение")
+@router.message()
+async def message_handler(msg: Message):
+    await msg.answer(f"Твой ID: {msg.from_user.id}")
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    asyncio.run(main())
