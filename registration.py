@@ -17,8 +17,9 @@ except Error as e:
 
 class User_info:
     user_id = 0
-    age = 0;
+    age = 0
     first_name = ""
     second_name = ""
+
 async def insert_database(row, data):
     pass
