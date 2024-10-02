@@ -3,11 +3,8 @@ from dotenv import load_dotenv, find_dotenv
 from aiogram import F, Bot, Dispatcher, types
 import asyncio
 from aiogram.filters import CommandStart
-
 load_dotenv(find_dotenv())
-
 bot = Bot(token=os.getenv("TOKEN"))
-
 dp = Dispatcher()
 
 
@@ -17,7 +14,7 @@ def not_in_database(id: int) -> bool:
 
 @dp.message(CommandStart())
 async def start_cmd(message: types.Message):
-    if (not_in_database(message.from_user.id)):
+    if not_in_database(message.from_user.id):
         await message.answer("Привет, я вижу, что мы не знакомы. Хочешь зарегестрироваться?")
 
 
