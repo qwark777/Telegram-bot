@@ -3,6 +3,7 @@ from dotenv import load_dotenv, find_dotenv
 from aiogram import F, Bot, Dispatcher, types
 import asyncio
 from aiogram.filters import CommandStart
+
 load_dotenv(find_dotenv())
 bot = Bot(token=os.getenv("TOKEN"))
 dp = Dispatcher()
@@ -20,9 +21,15 @@ async def start_cmd(message: types.Message):
 
 @dp.message(F.photo)
 async def start_cmd(message: types.Message):
-    document_id = message.photo[0].file_id
-    file_info = await bot.get_file(document_id)
-    await message.answer_photo(file_info.file_id)
+    try:
+        counter = 0
+        while 1:
+            string = os.getenv("PATH")
+            string.format(message.from_user.id, counter)
+            await message.photo[counter].download(string)
+            counter += 1
+    except:
+        print("hui")
 
 
 async def main():
