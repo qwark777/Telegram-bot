@@ -6,7 +6,7 @@ from aiogram.enums.parse_mode import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.filters import Command
 from aiogram.types import Message
-
+from aiogram import Bot, Dispatcher, types
 router = Router()
 bot = Bot(token="7061086759:AAF_s5oDahOFyjojIVMTGnyU-BEJjxEkgdA")
 dp = Dispatcher(storage=MemoryStorage())
@@ -20,9 +20,9 @@ async def main():
 @router.message(Command("start"))
 async def start_handler(msg: Message):
     await msg.answer("Сообщение приветствия, чел отправляет свое имя")
-    
 
-@router.message()
+
+@router.message(Command())
 async def message_handler(msg: Message):
     await msg.answer(f"Твой ID: {msg.from_user.id}")
 

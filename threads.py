@@ -1,2 +1,3 @@
 from subprocess import call
-call(["python", "main.py"])
+call(["python", "b.py"])
+print("hui")
