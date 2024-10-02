@@ -21,15 +21,11 @@ async def start_cmd(message: types.Message):
 
 @dp.message(F.photo)
 async def start_cmd(message: types.Message):
-    try:
-        counter = 0
-        while 1:
-            string = os.getenv("PATH")
-            string.format(message.from_user.id, counter)
-            await message.photo[counter].download(string)
-            counter += 1
-    except:
-        print("hui")
+    document_id = message.photo[-1].file_id
+    file_info = await bot.get_file(document_id)
+    string = os.getenv("TRACE")
+    tmp = string.format(id=message.from_user.id, number_of_media=file_info.file_id)
+    await bot.download_file(file_info.file_path, tmp)
 
 
 async def main():
