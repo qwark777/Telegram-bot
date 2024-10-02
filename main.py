@@ -7,6 +7,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram import Bot, Dispatcher, types
+import os
+from dotenv import load_dotenv
 router = Router()
 bot = Bot(token="7061086759:AAF_s5oDahOFyjojIVMTGnyU-BEJjxEkgdA")
 dp = Dispatcher(storage=MemoryStorage())
