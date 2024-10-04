@@ -4,8 +4,8 @@ start_keyboard = ReplyKeyboardMarkup(
     keyboard=
     [
         [
-            KeyboardButton(text="Да"),
-            KeyboardButton(text="Нет")
+            KeyboardButton(text="Да ✅"),
+            KeyboardButton(text="Нет ❎")
         ]
     ],
     resize_keyboard=True
