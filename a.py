@@ -1,22 +1,27 @@
 import os
 from dotenv import load_dotenv, find_dotenv
-from aiogram import F, Bot, Dispatcher, types
+from aiogram import F, Bot, Dispatcher, types #внешние библиотеки
 import asyncio
 from aiogram.filters import CommandStart
+
+
+from databases_functions import not_in_database #вспомогательные файлы
+from reply import start_keyboard
 
 load_dotenv(find_dotenv())
 bot = Bot(token=os.getenv("TOKEN"))
 dp = Dispatcher()
 
 
-def not_in_database(id: int) -> bool:
-    return True  # переделать
+
+
+
 
 
 @dp.message(CommandStart())
 async def start_cmd(message: types.Message):
     if not_in_database(message.from_user.id):
-        await message.answer("Привет, я вижу, что мы не знакомы. Хочешь зарегестрироваться?")
+        await message.answer("Привет, я вижу, что мы не знакомы. Хочешь зарегестрироваться?", reply_markup=start_keyboard)
 
 
 @dp.message(F.photo)
