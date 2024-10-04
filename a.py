@@ -1,11 +1,12 @@
 import os
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
 from dotenv import load_dotenv, find_dotenv
-from aiogram import F, Bot, Dispatcher, types #внешние библиотеки
+from aiogram import F, Bot, Dispatcher, types  # внешние библиотеки
 import asyncio
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, StateFilter
 
-
-from databases_functions import not_in_database #вспомогательные файлы
+from databases_functions import not_in_database  # вспомогательные файлы
 from reply import start_keyboard
 
 load_dotenv(find_dotenv())
@@ -13,16 +14,20 @@ bot = Bot(token=os.getenv("TOKEN"))
 dp = Dispatcher()
 
 
+class USER(StatesGroup):
+    registration = State()  # зарегестрирован или нет
+    name = State()
+    age = State()
+    sex = State()
+    university = State()
+    image = State()
 
 
-
-
-
-@dp.message(CommandStart())
-async def start_cmd(message: types.Message):
+@dp.message(StateFilter(None),CommandStart())
+async def start_cmd(message: types.Message, state: FSMContext):
     if not_in_database(message.from_user.id):
         await message.answer("Привет, я вижу, что мы не знакомы. Хочешь зарегестрироваться?", reply_markup=start_keyboard)
-
+    await state.set_state(USER.registration)
 
 @dp.message(F.photo)
 async def start_cmd(message: types.Message):
