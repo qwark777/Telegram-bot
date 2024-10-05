@@ -1,34 +1,88 @@
-import asyncio
-import logging
-import threading
-from aiogram import Bot, Dispatcher, Router
-from aiogram.enums.parse_mode import ParseMode
-from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.filters import Command
-from aiogram.types import Message
-from aiogram import Bot, Dispatcher, types
 import os
-from dotenv import load_dotenv
-router = Router()
-bot = Bot(token="7061086759:AAF_s5oDahOFyjojIVMTGnyU-BEJjxEkgdA")
-dp = Dispatcher(storage=MemoryStorage())
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State, any_state
+from dotenv import load_dotenv, find_dotenv
+from aiogram import F, Bot, Dispatcher, types  # внешние библиотеки
+import asyncio
+from aiogram.filters import StateFilter, Command
+
+from databases_functions import not_in_database, insert_full_name, insert_sex  # вспомогательные файлы
+from reply import start_keyboard, del_keyboard, sex_keyboard
+
+load_dotenv(find_dotenv())
+bot = Bot(token=os.getenv("TOKEN"))
+dp = Dispatcher()
+
+
+class USER(StatesGroup):
+    registration = State()  #желание зарегестрироваться
+    name = State()
+    age = State()
+    sex = State()
+    university = State()
+    image = State()
+
+
+@dp.message(StateFilter(None),F.text)
+async def start(message: types.Message, state: FSMContext):
+    if not_in_database(message.from_user.id):
+        await message.answer("Привет, я вижу, что мы не знакомы. Хочешь зарегестрироваться?", reply_markup=start_keyboard)
+    await state.set_state(USER.registration)
+
+
+@dp.message(USER.registration, F.text)
+async def continue_registration(message: types.Message, state: FSMContext):
+    if message.text == "Да ✅" or message.text.lower() == "да" or message.text == "✅" or message.text.lower() == "yes":
+        await message.answer("Как тебя зовут?", reply_markup=del_keyboard)
+        await state.set_state(USER.name)
+    elif message.text == "Нет ❌" or message.text.lower() == "нет" or message.text == "❌" or message.text.lower() == "no":
+        await message.answer("Напиши тогда, как захочешь)", reply_markup=del_keyboard)
+        await state.clear()
+    else:
+        await message.answer("Напиши мне 'да' или 'нет' или выбери ответ на виртуальной клавиатуре", reply_markup=del_keyboard)
+
+@dp.message(USER.name, F.text)
+async def get_name(message: types.Message, state: FSMContext):
+    if len(message.text.split()) != 2:
+        await message.answer("Напиши только имя и фамилию")
+    else:
+        if insert_full_name(message.from_user.id, message.text.capitalize()):
+            await message.answer("В боте произошла ошибка, напиши позже")
+            await state.clear()
+        else:
+            await message.answer("Ты парень или девушка?", reply_markup=sex_keyboard)
+            await state.set_state(USER.sex)
+
+
+@dp.message(USER.sex, F.text)
+async def get_sex(message: types.Message, state: FSMContext):
+    if message.text.lower() == "девушка" or message.text == "Девушка 👩‍🎓" or message.text.lower() == "girl" or message.text == "👩‍🎓":
+        if insert_sex(message.from_user.id, 0):
+            await message.answer("В боте произошла ошибка, напиши позже", reply_markup=del_keyboard)
+        else:
+            await message.answer("Сколько тебе лет?", reply_markup=del_keyboard)
+            await state.set_state(USER.age)
+    elif message.text.lower() == "парень" or message.text == "Парень 👨‍🎓" or message.text.lower() == "boy" or message.text == "👨‍🎓":
+        if insert_sex(message.from_user.id, 1):
+            await message.answer("В боте произошла ошибка, напиши позже", reply_markup=del_keyboard)
+        else:
+            await message.answer("Сколько тебе лет?", reply_markup=del_keyboard)
+            await state.set_state(USER.age)
+    else:
+        await message.answer("Пожалуйста напиши мне 'парень' или 'девушка' или выбери ответ на виртуальной клавиатуре")
+
+@dp.message(F.photo)
+async def start_cmd(message: types.Message):
+    document_id = message.photo[-1].file_id
+    file_info = await bot.get_file(document_id)
+    string = os.getenv("TRACE")
+    tmp = string.format(id=message.from_user.id, number_of_media=file_info.file_id)
+    await bot.download_file(file_info.file_path, tmp)
+
 
 async def main():
-    dp.include_router(router)
-    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
 
 
-@router.message(Command("start"))
-async def start_handler(msg: Message):
-    await msg.answer("Сообщение приветствия, чел отправляет свое имя")
-
-
-@router.message(Command())
-async def message_handler(msg: Message):
-    await msg.answer(f"Твой ID: {msg.from_user.id}")
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    asyncio.run(main())
+asyncio.run(main())
