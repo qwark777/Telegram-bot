@@ -4,10 +4,10 @@ from aiogram.fsm.state import StatesGroup, State
 from dotenv import load_dotenv, find_dotenv
 from aiogram import F, Bot, Dispatcher, types  # внешние библиотеки
 import asyncio
-from aiogram.filters import CommandStart, StateFilter
+from aiogram.filters import StateFilter, Command
 
 from databases_functions import not_in_database  # вспомогательные файлы
-from reply import start_keyboard
+from reply import start_keyboard, del_keyboard
 
 load_dotenv(find_dotenv())
 bot = Bot(token=os.getenv("TOKEN"))
@@ -15,7 +15,7 @@ dp = Dispatcher()
 
 
 class USER(StatesGroup):
-    registration = State()  # зарегестрирован или нет
+    registration = State()  #желание зарегестрироваться
     name = State()
     age = State()
     sex = State()
@@ -23,12 +23,22 @@ class USER(StatesGroup):
     image = State()
 
 
-@dp.message(StateFilter(None),CommandStart())
-async def start_cmd(message: types.Message, state: FSMContext):
+@dp.message(StateFilter(None),Command("start"))
+async def start(message: types.Message, state: FSMContext):
     if not_in_database(message.from_user.id):
         await message.answer("Привет, я вижу, что мы не знакомы. Хочешь зарегестрироваться?", reply_markup=start_keyboard)
     await state.set_state(USER.registration)
 
+@dp.message(USER.registration, F.text)
+async def continue_(message: types.Message, state: FSMContext):
+    if message.text == "Да ✅":
+        await message.answer("Как тебя зовут?", reply_markup=del_keyboard)
+        await state.set_state(USER.name)
+    elif message.text == "Нет ❎":
+        await message.answer("Напиши тогда, как захочешь)", reply_markup=del_keyboard)
+        await state.clear()
+    else:
+        await message.answer("Напиши мне 'да' или 'нет' или выбери ответ на виртуальной клавиатуре", reply_markup=del_keyboard)
 @dp.message(F.photo)
 async def start_cmd(message: types.Message):
     document_id = message.photo[-1].file_id
