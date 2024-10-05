@@ -6,7 +6,7 @@ from aiogram import F, Bot, Dispatcher, types  # внешние библиоте
 import asyncio
 from aiogram.filters import StateFilter, Command
 
-from databases_functions import not_in_database, insert_full_name, insert_sex  # вспомогательные файлы
+from databases_functions import not_in_database, insert_full_name, insert_sex, insert_age  # вспомогательные файлы
 from reply import start_keyboard, del_keyboard, sex_keyboard
 
 load_dotenv(find_dotenv())
@@ -21,7 +21,7 @@ class USER(StatesGroup):
     sex = State()
     university = State()
     image = State()
-
+    age_find = State()
 
 @dp.message(StateFilter(None),F.text)
 async def start(message: types.Message, state: FSMContext):
@@ -70,6 +70,19 @@ async def get_sex(message: types.Message, state: FSMContext):
             await state.set_state(USER.age)
     else:
         await message.answer("Пожалуйста напиши мне 'парень' или 'девушка' или выбери ответ на виртуальной клавиатуре")
+
+
+@dp.message(USER.age, F.text)
+async def get_sex(message: types.Message, state: FSMContext):
+    try:
+        if insert_age(message.from_user.id, int(message.text)):
+            await message.answer("В боте произошла ошибка, напиши позже")
+        else:
+            await message.answer("Какой возраст тебя интересует?")
+            await state.set_state(USER.age_find)
+    except ValueError:
+        await message.answer("Введи возраст числом")
+
 
 @dp.message(F.photo)
 async def start_cmd(message: types.Message):
