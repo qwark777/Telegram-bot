@@ -23,3 +23,16 @@ sex_keyboard = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True
 )
+find_sex_keyboard = ReplyKeyboardMarkup(
+    keyboard =
+    [
+        [
+            KeyboardButton(text="Парень 👨‍🎓"),
+            KeyboardButton(text="Девушка 👩‍🎓")
+        ],
+        [
+            KeyboardButton(text="Без разницы 🤷‍♂️🤷‍♀️")
+        ]
+    ],
+    resize_keyboard=True
+)

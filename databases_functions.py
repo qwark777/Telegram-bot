@@ -1,3 +1,4 @@
+import mysql.connector
 def not_in_database(id_: int) -> bool:
     return True  # переделать
 

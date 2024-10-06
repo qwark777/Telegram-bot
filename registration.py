@@ -1,11 +1,14 @@
 from getpass import getpass
+import asyncio
 from mysql.connector import connect, Error
+
+from main import CONNECOTR_ID
 
 try:
     with connect(
         host="localhost",
-        user=input("Введите имя пользователя: "),
-        password=input("Введите пароль: "),
+        user="root",
+        password="12345678",
     ) as connection:
         show_db_query = "SHOW DATABASES"
         with connection.cursor() as cursor:
