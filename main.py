@@ -78,7 +78,7 @@ async def get_age(message: types.Message, state: FSMContext):
         if insert_age(message.from_user.id, int(message.text)):
             await message.answer("В боте произошла ошибка, напиши позже")
         else:
-            await message.answer("Какой возраст тебя интересует?")
+            await message.answer("Какой возраст тебя интересует? Напиши диапазон в формате YY-YY")
             await state.set_state(USER.age_find)
     except ValueError:
         await message.answer("Введи возраст числом")
@@ -87,13 +87,17 @@ async def get_age(message: types.Message, state: FSMContext):
 @dp.message(USER.age_find, F.text)
 async def get_age_find(message: types.Message, state: FSMContext):
     try:
-        if insert_age_find(message.from_user.id, int(message.text)):
+        if int(message.text.split("-")[0]) > int(message.text.split("-")[1]):
+            await message.answer("Минимальный возраст должен быть не больше максимального")
+        elif insert_age_find(message.from_user.id, int(message.text.split("-")[0]), int(message.text.split("-")[1])):
             await message.answer("В боте произошла ошибка, напиши позже")
         else:
             await message.answer("Прикрепи свое фото")
             await state.set_state(USER.image)
     except ValueError:
         await message.answer("Введи возраст числом")
+    except IndexError:
+        await message.answer("Введи возраст в формате YY-YY")
 
 
 @dp.message(USER.image, F.photo)
