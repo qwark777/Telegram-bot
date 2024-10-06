@@ -6,7 +6,7 @@ from aiogram import F, Bot, Dispatcher, types  # внешние библиоте
 import asyncio
 from aiogram.filters import StateFilter, Command
 
-from databases_functions import not_in_database, insert_full_name, insert_sex, insert_age  # вспомогательные файлы
+from databases_functions import not_in_database, insert_full_name, insert_sex, insert_age, insert_age_find  # вспомогательные файлы
 from reply import start_keyboard, del_keyboard, sex_keyboard
 
 load_dotenv(find_dotenv())
@@ -73,7 +73,7 @@ async def get_sex(message: types.Message, state: FSMContext):
 
 
 @dp.message(USER.age, F.text)
-async def get_sex(message: types.Message, state: FSMContext):
+async def get_age(message: types.Message, state: FSMContext):
     try:
         if insert_age(message.from_user.id, int(message.text)):
             await message.answer("В боте произошла ошибка, напиши позже")
@@ -84,8 +84,20 @@ async def get_sex(message: types.Message, state: FSMContext):
         await message.answer("Введи возраст числом")
 
 
-@dp.message(F.photo)
-async def start_cmd(message: types.Message):
+@dp.message(USER.age_find, F.text)
+async def get_age_find(message: types.Message, state: FSMContext):
+    try:
+        if insert_age_find(message.from_user.id, int(message.text)):
+            await message.answer("В боте произошла ошибка, напиши позже")
+        else:
+            await message.answer("Прикрепи свое фото")
+            await state.set_state(USER.image)
+    except ValueError:
+        await message.answer("Введи возраст числом")
+
+
+@dp.message(USER.image, F.photo)
+async def get_image(message: types.Message):
     document_id = message.photo[-1].file_id
     file_info = await bot.get_file(document_id)
     string = os.getenv("TRACE")
