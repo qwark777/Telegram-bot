@@ -18,3 +18,5 @@ def insert_age(id_: int, age: int) -> bool:  # возвращает True есл�
 def insert_age_find(id_: int, age_min: int, age_max: int) -> bool:   # возвращает True если произошла ошибка
     return False
 
+def insert_sex_find(id_: int, sex: int) -> bool:  # возвращает True если произошла ошибка
+    return False

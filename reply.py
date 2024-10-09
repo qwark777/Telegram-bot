@@ -27,8 +27,8 @@ find_sex_keyboard = ReplyKeyboardMarkup(
     keyboard =
     [
         [
-            KeyboardButton(text="Парень 👨‍🎓"),
-            KeyboardButton(text="Девушка 👩‍🎓")
+            KeyboardButton(text="Парней 👨‍🎓"),
+            KeyboardButton(text="Девушек 👩‍🎓")
         ],
         [
             KeyboardButton(text="Без разницы 🤷‍♂️🤷‍♀️")

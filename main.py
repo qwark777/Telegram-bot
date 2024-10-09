@@ -9,7 +9,7 @@ import mysql.connector
 from mysql.connector import pooling, cursor
 
 
-from databases_functions import not_in_database, insert_full_name, insert_sex, insert_age, insert_age_find  # вспомогательные файлы
+from databases_functions import not_in_database, insert_full_name, insert_sex, insert_age, insert_age_find, insert_sex_find  # вспомогательные файлы
 from reply import start_keyboard, del_keyboard, sex_keyboard
 
 load_dotenv(find_dotenv())
@@ -45,6 +45,7 @@ async def continue_registration(message: types.Message, state: FSMContext):
     else:
         await message.answer("Напиши мне 'да' или 'нет' или выбери ответ на виртуальной клавиатуре", reply_markup=del_keyboard)
 
+
 @dp.message(USER.name, F.text)
 async def get_name(message: types.Message, state: FSMContext):
     if len(message.text.split()) != 2:
@@ -70,28 +71,28 @@ async def get_sex(message: types.Message, state: FSMContext):
         if insert_sex(message.from_user.id, 1):
             await message.answer("В боте произошла ошибка, напиши позже", reply_markup=del_keyboard)
         else:
-            await message.answer("Сколько тебе лет?", reply_markup=del_keyboard)
-            await state.set_state(USER.age)
+            await message.answer("Кого будем искать?", reply_markup=del_keyboard)
+            await state.set_state(USER.find_sex)
     else:
         await message.answer("Пожалуйста напиши мне 'парень' или 'девушка' или выбери ответ на виртуальной клавиатуре")
 
 
 @dp.message(USER.find_sex, F.text)
 async def get_find_sex(message: types.Message, state: FSMContext):
-    if message.text.lower() == "девушка" or message.text == "Девушка 👩‍🎓" or message.text.lower() == "girl" or message.text == "👩‍🎓":
-        if insert_sex(message.from_user.id, 0):
+    if message.text.lower() == "девушек" or message.text == "Девушек 👩‍🎓" or message.text.lower() == "girls" or message.text == "👩‍🎓":
+        if insert_sex_find(message.from_user.id, 0):
             await message.answer("В боте произошла ошибка, напиши позже", reply_markup=del_keyboard)
         else:
             await message.answer("Сколько тебе лет?", reply_markup=del_keyboard)
             await state.set_state(USER.age)
-    elif message.text.lower() == "парень" or message.text == "Парень 👨‍🎓" or message.text.lower() == "boy" or message.text == "👨‍🎓":
-        if insert_sex(message.from_user.id, 1):
+    elif message.text.lower() == "парней" or message.text == "Парней 👨‍🎓" or message.text.lower() == "boys" or message.text == "👨‍🎓":
+        if insert_sex_find(message.from_user.id, 1):
             await message.answer("В боте произошла ошибка, напиши позже", reply_markup=del_keyboard)
         else:
             await message.answer("Сколько тебе лет?", reply_markup=del_keyboard)
             await state.set_state(USER.age)
     else:
-        await message.answer("Пожалуйста напиши мне 'парень' или 'девушка' или выбери ответ на виртуальной клавиатуре")
+        await message.answer("Пожалуйста напиши мне 'парней' или 'девушек' или выбери ответ на виртуальной клавиатуре")
 
 
 @dp.message(USER.age, F.text)
@@ -134,8 +135,12 @@ async def get_image(message: types.Message):
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
+
+
 def get_connector_id():
     return connection_pool
+
+
 if __name__ == "__main__":
     connection_pool = pooling.MySQLConnectionPool(
         pool_name="dating_bot_pool",

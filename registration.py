@@ -2,7 +2,7 @@ from getpass import getpass
 import asyncio
 from mysql.connector import connect, Error
 
-from main import CONNECOTR_ID
+
 
 try:
     with connect(
