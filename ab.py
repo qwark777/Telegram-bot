@@ -1,19 +1,20 @@
-
 import mysql.connector.pooling
 
-config = {
+dbconfig = {
     "user": "root",
     "password": "12345678",
     "host": "localhost",
-    "database": "msutndr"
+
 }
 
-connection_pool = mysql.connector.pooling.MySQLConnectionPool(
-    pool_name="mypool",
-    pool_size=20,
-)
-
-connection = connection_pool.get_connection()
-cursor = connection.cursor()
-cursor.execute("SELECT * FROM mytable")
-results = cursor.fetchall()
+cnxpool = mysql.connector.pooling.MySQLConnectionPool(pool_name = "mypool",
+                                                      pool_size = 20,
+                                                      **dbconfig)
+cnx1 = cnxpool.get_connection()
+cnx2 = cnxpool.get_connection()
+create_db_query = "SHOW DATABASES"
+show_db_query = "SHOW DATABASES"
+with cnx1.cursor() as cursor:
+    cursor.execute(show_db_query)
+    for db in cursor:
+        print(db)
