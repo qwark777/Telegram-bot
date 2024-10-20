@@ -1,7 +1,7 @@
 from getpass import getpass
 import asyncio
 from mysql.connector import connect, Error
-
+import mysql.connector.pooling
 
 
 try:

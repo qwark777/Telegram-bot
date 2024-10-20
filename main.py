@@ -8,8 +8,8 @@ from aiogram.filters import StateFilter, Command
 import mysql.connector
 from mysql.connector import pooling, cursor
 
-
-from databases_functions import not_in_database, insert_full_name, insert_sex, insert_age, insert_age_find, insert_sex_find  # вспомогательные файлы
+from databases_functions import not_in_database, insert_full_name, insert_sex, insert_age, insert_age_find, \
+    insert_sex_find, select_name  # вспомогательные файлы
 from reply import start_keyboard, del_keyboard, sex_keyboard
 
 load_dotenv(find_dotenv())
@@ -18,7 +18,7 @@ dp = Dispatcher()
 
 
 class USER(StatesGroup):
-    registration = State()  #желание зарегестрироваться
+    registration = State()  # желание зарегестрироваться
     name = State()
     age = State()
     sex = State()
@@ -27,10 +27,15 @@ class USER(StatesGroup):
     age_find = State()
     find_sex = State()
 
-@dp.message(StateFilter(None),F.text)
+
+@dp.message(StateFilter(None), F.text)
 async def start(message: types.Message, state: FSMContext):
-    if not_in_database(message.from_user.id):
-        await message.answer("Привет, я вижу, что мы не знакомы. Хочешь зарегестрироваться?", reply_markup=start_keyboard)
+    if await not_in_database(message.from_user.id, connection_pool):
+        await message.answer("Привет, я вижу, что мы не знакомы. Хочешь зарегестрироваться?",
+                             reply_markup=start_keyboard)
+    else:
+        string = await select_name(message.from_user.id, connection_pool)
+        await message.answer("Привет, {}! Хочешь продолжить наше общение?".format(string))
     await state.set_state(USER.registration)
 
 
@@ -43,7 +48,8 @@ async def continue_registration(message: types.Message, state: FSMContext):
         await message.answer("Напиши тогда, как захочешь)", reply_markup=del_keyboard)
         await state.clear()
     else:
-        await message.answer("Напиши мне 'да' или 'нет' или выбери ответ на виртуальной клавиатуре", reply_markup=del_keyboard)
+        await message.answer("Напиши мне 'да' или 'нет' или выбери ответ на виртуальной клавиатуре",
+                             reply_markup=del_keyboard)
 
 
 @dp.message(USER.name, F.text)
@@ -51,7 +57,7 @@ async def get_name(message: types.Message, state: FSMContext):
     if len(message.text.split()) != 2:
         await message.answer("Напиши только имя и фамилию")
     else:
-        if insert_full_name(message.from_user.id, message.text.capitalize()):
+        if await insert_full_name(message.from_user.id, message.text.title(), connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже")
             await state.clear()
         else:
@@ -62,13 +68,13 @@ async def get_name(message: types.Message, state: FSMContext):
 @dp.message(USER.sex, F.text)
 async def get_sex(message: types.Message, state: FSMContext):
     if message.text.lower() == "девушка" or message.text == "Девушка 👩‍🎓" or message.text.lower() == "girl" or message.text == "👩‍🎓":
-        if insert_sex(message.from_user.id, 0):
+        if await insert_sex(message.from_user.id, 0, connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже", reply_markup=del_keyboard)
         else:
             await message.answer("Сколько тебе лет?", reply_markup=del_keyboard)
             await state.set_state(USER.age)
     elif message.text.lower() == "парень" or message.text == "Парень 👨‍🎓" or message.text.lower() == "boy" or message.text == "👨‍🎓":
-        if insert_sex(message.from_user.id, 1):
+        if await insert_sex(message.from_user.id, 1, connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже", reply_markup=del_keyboard)
         else:
             await message.answer("Кого будем искать?", reply_markup=del_keyboard)
@@ -80,13 +86,13 @@ async def get_sex(message: types.Message, state: FSMContext):
 @dp.message(USER.find_sex, F.text)
 async def get_find_sex(message: types.Message, state: FSMContext):
     if message.text.lower() == "девушек" or message.text == "Девушек 👩‍🎓" or message.text.lower() == "girls" or message.text == "👩‍🎓":
-        if insert_sex_find(message.from_user.id, 0):
+        if await insert_sex_find(message.from_user.id, 0, connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже", reply_markup=del_keyboard)
         else:
             await message.answer("Сколько тебе лет?", reply_markup=del_keyboard)
             await state.set_state(USER.age)
     elif message.text.lower() == "парней" or message.text == "Парней 👨‍🎓" or message.text.lower() == "boys" or message.text == "👨‍🎓":
-        if insert_sex_find(message.from_user.id, 1):
+        if await insert_sex_find(message.from_user.id, 1, connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже", reply_markup=del_keyboard)
         else:
             await message.answer("Сколько тебе лет?", reply_markup=del_keyboard)
@@ -98,7 +104,7 @@ async def get_find_sex(message: types.Message, state: FSMContext):
 @dp.message(USER.age, F.text)
 async def get_age(message: types.Message, state: FSMContext):
     try:
-        if insert_age(message.from_user.id, int(message.text)):
+        if await insert_age(message.from_user.id, int(message.text), connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже")
         else:
             await message.answer("Какой возраст тебя интересует? Напиши диапазон в формате YY-YY")
@@ -112,7 +118,8 @@ async def get_age_find(message: types.Message, state: FSMContext):
     try:
         if int(message.text.split("-")[0]) > int(message.text.split("-")[1]):
             await message.answer("Минимальный возраст должен быть не больше максимального")
-        elif insert_age_find(message.from_user.id, int(message.text.split("-")[0]), int(message.text.split("-")[1])):
+        elif await insert_age_find(message.from_user.id, int(message.text.split("-")[0]),
+                                   int(message.text.split("-")[1]), connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже")
         else:
             await message.answer("Прикрепи свое фото")
@@ -137,17 +144,11 @@ async def main():
     await dp.start_polling(bot)
 
 
-def get_connector_id():
-    return connection_pool
-
-
 if __name__ == "__main__":
-    connection_pool = pooling.MySQLConnectionPool(
-        pool_name="dating_bot_pool",
-        pool_size=15,
-        host='localhost',
-        database='msutndr',
-        user='root',
-        password='12345678'
-    )
+    dbconfig = {
+        "user": "root",
+        "password": "12345678",
+        "host": "localhost",
+    }
+    connection_pool = mysql.connector.pooling.MySQLConnectionPool(pool_name="my_pool", pool_size=20, **dbconfig)
     asyncio.run(main())
