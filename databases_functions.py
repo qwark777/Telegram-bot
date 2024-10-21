@@ -122,7 +122,7 @@ async def select_name(id_: int, connection_pool: MySQLConnectionPool) -> str:
         return str(result_set[0][0])
 
 
-async def insert_media(id_: int, id_media: int, connection_pool: MySQLConnectionPool) -> str:
+async def insert_media(id_: int, id_media: int, counter: int, connection_pool: MySQLConnectionPool) -> str:
     connector = connection_pool.get_connection()
     with connector.cursor() as cursor:
         cursor.execute(os.getenv("USE_DATABASE"))
@@ -133,3 +133,18 @@ async def insert_media(id_: int, id_media: int, connection_pool: MySQLConnection
         connector.commit()
         connector.close()
         return str(result_set[0][0])
+
+async def get_count_of_media(id_: int, connection_pool: MySQLConnectionPool) -> int:
+    connector = connection_pool.get_connection()
+    with connector.cursor() as cursor:
+        cursor.execute(os.getenv("USE_DATABASE"))
+        string = os.getenv("SELECT_COUNT")
+        string = string.format(ID=id_)
+        cursor.execute(string)
+        result_set = cursor.fetchall()
+        connector.commit()
+        connector.close()
+        return int(result_set[0][0])
+
+async def print_profile(id_: int, connection_pool: MySQLConnectionPool) -> None:
+    pass

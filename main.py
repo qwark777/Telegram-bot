@@ -6,11 +6,13 @@ from aiogram import F, Bot, Dispatcher, types  # внешние библиоте
 import asyncio
 from aiogram.filters import StateFilter, Command
 import mysql.connector
+from aiogram.types import video_note
 from mysql.connector import pooling, cursor
+import time
 
 from databases_functions import not_in_database, insert_full_name, insert_sex, insert_age, insert_age_find, \
-    insert_sex_find, select_name  # вспомогательные файлы
-from reply import start_keyboard, del_keyboard, sex_keyboard
+    insert_sex_find, select_name, get_count_of_media, print_profile  # вспомогательные файлы
+from reply import start_keyboard, del_keyboard, sex_keyboard, find_sex_keyboard
 
 load_dotenv(find_dotenv())
 bot = Bot(token=os.getenv("TOKEN"))
@@ -71,13 +73,13 @@ async def get_sex(message: types.Message, state: FSMContext):
         if await insert_sex(message.from_user.id, 0, connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже", reply_markup=del_keyboard)
         else:
-            await message.answer("Сколько тебе лет?", reply_markup=del_keyboard)
+            await message.answer("Кого будем искать?", reply_markup=find_sex_keyboard)
             await state.set_state(USER.age)
     elif message.text.lower() == "парень" or message.text == "Парень 👨‍🎓" or message.text.lower() == "boy" or message.text == "👨‍🎓":
         if await insert_sex(message.from_user.id, 1, connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже", reply_markup=del_keyboard)
         else:
-            await message.answer("Кого будем искать?", reply_markup=del_keyboard)
+            await message.answer("Кого будем искать?", reply_markup=find_sex_keyboard)
             await state.set_state(USER.find_sex)
     else:
         await message.answer("Пожалуйста напиши мне 'парень' или 'девушка' или выбери ответ на виртуальной клавиатуре")
@@ -97,8 +99,14 @@ async def get_find_sex(message: types.Message, state: FSMContext):
         else:
             await message.answer("Сколько тебе лет?", reply_markup=del_keyboard)
             await state.set_state(USER.age)
+    elif message.text == "Без разницы 🤷‍♂️🤷‍♀️" or message.text.lower() == "без разницы" or message.text == "🤷‍♂️🤷‍♀️":
+        if await insert_sex_find(message.from_user.id, 2, connection_pool):
+            await message.answer("В боте произошла ошибка, напиши позже", reply_markup=del_keyboard)
+        else:
+            await message.answer("Сколько тебе лет?", reply_markup=del_keyboard)
+            await state.set_state(USER.age)
     else:
-        await message.answer("Пожалуйста напиши мне 'парней' или 'девушек' или выбери ответ на виртуальной клавиатуре")
+        await message.answer("Пожалуйста напиши мне 'парней', 'девушек' или 'без разницы' или выбери ответ на виртуальной клавиатуре")
 
 
 @dp.message(USER.age, F.text)
@@ -118,6 +126,8 @@ async def get_age_find(message: types.Message, state: FSMContext):
     try:
         if int(message.text.split("-")[0]) > int(message.text.split("-")[1]):
             await message.answer("Минимальный возраст должен быть не больше максимального")
+        elif int(message.text.split("-")[1]) > 255:
+            await message.answer("Слишком большой максимальный возраст")
         elif await insert_age_find(message.from_user.id, int(message.text.split("-")[0]),
                                    int(message.text.split("-")[1]), connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже")
@@ -132,11 +142,16 @@ async def get_age_find(message: types.Message, state: FSMContext):
 
 @dp.message(USER.image, F.photo)
 async def get_image(message: types.Message):
-    document_id = message.photo[-1].file_id
-    file_info = await bot.get_file(document_id)
-    string = os.getenv("TRACE")
-    tmp = string.format(id=message.from_user.id, number_of_media=file_info.file_id)
-    await bot.download_file(file_info.file_path, tmp)
+    number = get_count_of_media(message.from_user.id, connection_pool)
+    if number == 4:
+        await message.answer("К сожалению возможно только 4 медиа-файла в одной анкете. Мы взяли первые 4 файла")
+    elif number == 0:
+        # вставка в бд
+
+        time.sleep(4)
+        await message.answer("Отлично! Вот твоя анкета:")
+        await print_profile(message.from_user.id, connection_pool)
+
 
 
 async def main():
@@ -150,5 +165,5 @@ if __name__ == "__main__":
         "password": "12345678",
         "host": "localhost",
     }
-    connection_pool = mysql.connector.pooling.MySQLConnectionPool(pool_name="my_pool", pool_size=20, **dbconfig)
+    connection_pool = mysql.connector.pooling.MySQLConnectionPool(pool_name="my_pool", pool_size=32, **dbconfig)
     asyncio.run(main())
