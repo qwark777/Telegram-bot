@@ -1,4 +1,5 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardButton, \
+    InlineKeyboardMarkup
 
 start_keyboard = ReplyKeyboardMarkup(
     keyboard=
@@ -36,3 +37,13 @@ find_sex_keyboard = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True
 )
+
+find_university = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text='Первая кнопка!', callback_data='button1')
+        ]
+    ]
+)
+

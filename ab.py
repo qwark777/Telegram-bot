@@ -61,3 +61,37 @@ if __name__ == "__main__":
 #     string = os.getenv("TRACE")
 #     tmp = string.format(id=message.from_user.id, number_of_media=file_info.file_id)
 #     await bot.download_file(file_info.file_path, tmp)
+
+
+file_id = message.photo[-1].file_id
+    file_info = await bot.get_file(file_id)
+    file_path = file_info.file_path
+    number = len(media_storage[message.from_user.id])
+    if number == 0:
+        media_storage[message.from_user.id].append(file_path)
+        time.sleep(3)
+        await message.answer("Отлично!Расскажи немного о себе или отправь '-', если не хочешь")
+        await state.set_state(USER.description)
+    else:
+        if len(media_storage[message.from_user.id]) <= 3:
+            media_storage[message.from_user.id].append(file_path)
+
+
+@start_router.message(Command('send_media_group'))
+async def cmd_start(message: Message, state: FSMContext):
+    photo_1 = InputMediaPhoto(type='photo',
+                              media=FSInputFile(path=os.path.join(all_media_dir, 'photo_2024-06-05_09-32-15.jpg')),
+                              caption='Описание ко <b>ВСЕЙ</b> медиагруппе')
+    photo_2 = InputMediaPhoto(type='photo',
+                              media=FSInputFile(path=os.path.join(all_media_dir, 'photo_2024-06-14_20-13-40.jpg')))
+    photo_3 = InputMediaPhoto(type='photo',
+                              media=FSInputFile(path=os.path.join(all_media_dir, 'photo_2024-06-05_09-32-15.jpg')))
+    video_1 = InputMediaVideo(type='video',
+                              media=FSInputFile(path=os.path.join(all_media_dir, 'IMG_4045.MP4')))
+    photo_4 = InputMediaPhoto(type='photo',
+                              media=FSInputFile(path=os.path.join(all_media_dir, 'photo_2024-06-14_20-16-27.jpg')))
+    video_2 = InputMediaVideo(type='video',
+                              media=FSInputFile(path=os.path.join(all_media_dir, 'IMG_3978.MP4')))
+
+    media = [photo_1, photo_2, photo_3, video_1, photo_4, video_2]
+    await message.answer_media_group(media=media)
