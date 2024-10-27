@@ -42,7 +42,10 @@ find_university = InlineKeyboardMarkup(
     inline_keyboard=
     [
         [
-            InlineKeyboardButton(text='Первая кнопка!', callback_data='button1')
+            InlineKeyboardButton(text='МГУ ❌', callback_data='МГУ'),
+            InlineKeyboardButton(text='ВШЭ ❌', callback_data='ВШЭ'),
+            InlineKeyboardButton(text='РАНХИГС ❌', callback_data='РАНХИГС'),
+            InlineKeyboardButton(text='МГТУ им. Баумана ❌', callback_data='МГТУ')
         ]
     ]
 )
