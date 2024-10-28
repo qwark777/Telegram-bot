@@ -205,9 +205,7 @@ async def print_profile(id_: int, connection_pool: MySQLConnectionPool, bot: Bot
             cursor.execute(desc)
             result_desc = cursor.fetchall()
             text = text.format(NAME = result_name[0][0], AGE = result_age[0][0], DESC = result_desc[0][0])
-
             string = os.getenv("SELECT_MEDIA")
-
             a = string.format(ID=id_, COUNTER=1)
             cursor.execute(a)
             result_set = cursor.fetchall()

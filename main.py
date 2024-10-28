@@ -23,6 +23,10 @@ bot = Bot(token=os.getenv("TOKEN"))
 dp = Dispatcher()
 dp.message.middleware(AlbumMiddleware())
 
+@dp.message(Command("profile"), F.text)
+async def profile(message: types.Message, state: FSMContext):
+    await print_profile(message.from_user.id, connection_pool, bot)
+
 
 @dp.message(StateFilter(None), F.text)
 async def start(message: types.Message, state: FSMContext):
@@ -39,7 +43,7 @@ async def start(message: types.Message, state: FSMContext):
 @dp.message(User.registration, F.text)
 async def continue_registration(message: types.Message, state: FSMContext):
     if message.text == "Да ✅" or message.text.lower() == "да" or message.text == "✅" or message.text.lower() == "yes":
-        await message.answer("Как тебя зовут?", reply_markup=del_keyboard)
+        await message.answer("Как тебя называть?", reply_markup=del_keyboard)
         await state.set_state(User.name)
     elif message.text == "Нет ❌" or message.text.lower() == "нет" or message.text == "❌" or message.text.lower() == "no":
         await message.answer("Напиши тогда, как захочешь)", reply_markup=del_keyboard)
@@ -51,10 +55,10 @@ async def continue_registration(message: types.Message, state: FSMContext):
 
 @dp.message(User.name, F.text)
 async def get_name(message: types.Message, state: FSMContext):
-    if len(message.text.split()) != 2:
-        await message.answer("Напиши только имя и фамилию")
+    if len(message.text) > 50:
+        await message.answer("Имя не должно превышать 50 символов")
     else:
-        if await insert_full_name(message.from_user.id, message.text.title(), connection_pool):
+        if await insert_full_name(message.from_user.id, message.text, connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже")
             await state.clear()
         else:
