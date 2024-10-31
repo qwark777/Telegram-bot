@@ -185,7 +185,7 @@ async def insert_type(id_: int, type_: int, counter: int, connection_pool: MySQL
         return True
 
 
-async def print_profile(id_: int, connection_pool: MySQLConnectionPool, bot: Bot) -> bool:
+async def print_registration_profile(id_: int, connection_pool: MySQLConnectionPool, bot: Bot) -> bool:
     try:
         text = str(os.getenv("FORM_PATTERN"))
         connector = connection_pool.get_connection()
@@ -204,6 +204,8 @@ async def print_profile(id_: int, connection_pool: MySQLConnectionPool, bot: Bot
             desc = string.format(ID=id_, COLUMN='description')
             cursor.execute(desc)
             result_desc = cursor.fetchall()
+            if result_desc == "":
+                text = os.getenv("FORM_PATTERN_WITHOUT_DESC")
             text = text.format(NAME = result_name[0][0], AGE = result_age[0][0], DESC = result_desc[0][0])
             string = os.getenv("SELECT_MEDIA")
             a = string.format(ID=id_, COUNTER=1)
@@ -213,7 +215,6 @@ async def print_profile(id_: int, connection_pool: MySQLConnectionPool, bot: Bot
                 media.append(types.InputMediaVideo(media=result_set[0][1], caption=text))
             else:
                 media.append(types.InputMediaPhoto(media=result_set[0][1], caption=text))
-
 
             for i in range(2, await get_count_of_media(id_, connection_pool) + 1):
                 a = string.format(ID=id_, COUNTER=i)
@@ -226,6 +227,7 @@ async def print_profile(id_: int, connection_pool: MySQLConnectionPool, bot: Bot
 
             await bot.send_media_group(-4513837603, media=media)
             await bot.send_media_group(id_, media=media)
+            await bot.send_message(id_, text="Все верно?")
             connector.commit()
             connector.close()
         return False
