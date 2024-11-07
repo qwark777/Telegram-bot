@@ -2,12 +2,19 @@ import asyncio
 from redis import asyncio as aioredis
 
 async def main():
-    redis = aioredis.from_url("redis://localhost")
+    redis = await aioredis.from_url("redis://localhost")
 
     try:
-        await redis.set("my-key", "value", ex=604800)
-        value = await redis.get("my-key")
-        print(value.decode('utf-8'))
+        my_array = [1, 2, 3]
+
+        # Добавляем значения в конец списка
+        await redis.rpush('mylist', *my_array)
+
+        # Получаем элементы из списка
+        result = await redis.lrange('mylist', 0, -1)
+
+        # Выводим результат
+        print(result)
     finally:
         await redis.aclose()
 

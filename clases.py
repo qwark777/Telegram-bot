@@ -1,8 +1,10 @@
-from aiogram.fsm.state import StatesGroup, State
-from typing import Callable, Any, Awaitable, Union, Dict
-from aiogram import BaseMiddleware
-from aiogram.types import Message
 import asyncio
+from typing import Callable, Any, Awaitable, Union
+
+from aiogram import BaseMiddleware
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.types import Message
+
 
 class Constants:
     guy = 1
@@ -10,6 +12,18 @@ class Constants:
     someone = 2
     photo = 1
     video = 0
+    MSU = 1
+    HSE = 2
+    RANEPA = 3
+    BMSTU = 4
+    MIREA = 5
+
+class Patterns:
+    MSU = 0b1
+    HSE = 0b10
+    RANEPA = 0b100
+    BMSTU = 0b1000
+    MIREA = 0b10000
 
 class User(StatesGroup):
     registration = State()  # желание зарегестрироваться
@@ -17,11 +31,13 @@ class User(StatesGroup):
     age = State()
     sex = State()
     university = State()
+    find_university = State()
     image = State()
     age_find = State()
     find_sex = State()
     description = State()
     wait = State()
+    find = State()
 
 class AlbumMiddleware(BaseMiddleware):
     album_data: dict = {}

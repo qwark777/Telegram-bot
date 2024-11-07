@@ -1,7 +1,5 @@
-import schedule
-import datetime
-from mysql.connector.pooling import MySQLConnectionPool
+import aiomysql
 
 
-def delete_inactive_users(connection_pool: MySQLConnectionPool):
+async def delete_inactive_users(connection_pool: aiomysql.pool.Pool) -> None :
     pass

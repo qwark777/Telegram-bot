@@ -12,7 +12,10 @@ start_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
 
 )
+
+
 del_keyboard = ReplyKeyboardRemove()
+
 
 sex_keyboard = ReplyKeyboardMarkup(
     keyboard =
@@ -24,6 +27,8 @@ sex_keyboard = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True
 )
+
+
 find_sex_keyboard = ReplyKeyboardMarkup(
     keyboard =
     [
@@ -38,16 +43,33 @@ find_sex_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-find_university = InlineKeyboardMarkup(
+
+back_keyboard = InlineKeyboardMarkup(
     inline_keyboard=
     [
         [
-            InlineKeyboardButton(text='МГУ ❌', callback_data='МГУ'),
-            InlineKeyboardButton(text='ВШЭ ❌', callback_data='ВШЭ'),
-            InlineKeyboardButton(text='РАНХИГС ❌', callback_data='РАНХИГС'),
-            InlineKeyboardButton(text='МГТУ им. Баумана ❌', callback_data='МГТУ'),
-            InlineKeyboardButton(text='МИРЕА ❌', callback_data='МИРЕА')
+            InlineKeyboardButton(text='Назад 🔙', callback_data='btn_99')
         ]
     ]
 )
 
+
+uni_keyboard = ReplyKeyboardMarkup(
+    keyboard =
+    [
+        [
+            KeyboardButton(text="МГУ"),
+            KeyboardButton(text="ВШЭ")
+        ],
+        [
+            KeyboardButton(text="РАНХИГС"),
+            KeyboardButton(text="МГТУ им. Баумана")
+        ],
+        [
+            KeyboardButton(text="МИРЕА")
+        ]
+    ],
+    resize_keyboard=True
+)
+
+button_texts = ["МГУ ✅", "ВШЭ ✅", "РАНХИГС ✅", "МГТУ им. Баумана ✅", "МИРЕА ✅"]
