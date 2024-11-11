@@ -1,48 +1,45 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardButton, \
-    InlineKeyboardMarkup
+from aiogram.types import ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 
-start_keyboard = ReplyKeyboardMarkup(
-    keyboard=
+start_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=
     [
         [
-            KeyboardButton(text="Да ✅"),
-            KeyboardButton(text="Нет ❌")
+            InlineKeyboardButton(text="Да ✅", callback_data="btn_01_01"),
+            InlineKeyboardButton(text="Нет ❌", callback_data="btn_01_02")
         ]
-    ],
-    resize_keyboard=True
-
+    ]
 )
-
 
 del_keyboard = ReplyKeyboardRemove()
 
-
-sex_keyboard = ReplyKeyboardMarkup(
-    keyboard =
+sex_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=
     [
         [
-            KeyboardButton(text="Парень 👨‍🎓"),
-            KeyboardButton(text="Девушка 👩‍🎓")
-        ]
-    ],
-    resize_keyboard=True
-)
-
-
-find_sex_keyboard = ReplyKeyboardMarkup(
-    keyboard =
-    [
-        [
-            KeyboardButton(text="Парней 👨‍🎓"),
-            KeyboardButton(text="Девушек 👩‍🎓")
+            InlineKeyboardButton(text="Парень 👨‍🎓", callback_data="btn_02_01"),
+            InlineKeyboardButton(text="Девушка 👩‍🎓", callback_data="btn_02_02")
         ],
         [
-            KeyboardButton(text="Без разницы 🤷‍♂️🤷‍♀️")
+            InlineKeyboardButton(text="Назад 🔙", callback_data="btn_02_99")
         ]
-    ],
-    resize_keyboard=True
+    ]
 )
 
+find_sex_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text="Парней 👨‍🎓", callback_data="btn_03_01"),
+            InlineKeyboardButton(text="Девушек 👩‍🎓", callback_data="btn_03_02")
+        ],
+        [
+            InlineKeyboardButton(text="Без разницы 🤷‍♂️🤷‍♀️", callback_data="btn_03_03")
+        ],
+        [
+            InlineKeyboardButton(text="Назад 🔙", callback_data="btn_03_99")
+        ]
+    ]
+)
 
 back_keyboard = InlineKeyboardMarkup(
     inline_keyboard=
@@ -53,23 +50,16 @@ back_keyboard = InlineKeyboardMarkup(
     ]
 )
 
-
-uni_keyboard = ReplyKeyboardMarkup(
-    keyboard =
+uni_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=
     [
-        [
-            KeyboardButton(text="МГУ"),
-            KeyboardButton(text="ВШЭ")
-        ],
-        [
-            KeyboardButton(text="РАНХИГС"),
-            KeyboardButton(text="МГТУ им. Баумана")
-        ],
-        [
-            KeyboardButton(text="МИРЕА")
-        ]
-    ],
-    resize_keyboard=True
+        [InlineKeyboardButton(text="МГУ", callback_data="btn_04_01")],
+        [InlineKeyboardButton(text="ВШЭ", callback_data="btn_04_02")],
+        [InlineKeyboardButton(text="РАНХИГС", callback_data="btn_04_03")],
+        [InlineKeyboardButton(text="МГТУ им. Баумана", callback_data="btn_04_04")],
+        [InlineKeyboardButton(text="МИРЕА", callback_data="btn_04_05")],
+        [InlineKeyboardButton(text="Назад 🔙", callback_data="btn_04_99")]
+    ]
 )
 
 button_texts = ["МГУ ✅", "ВШЭ ✅", "РАНХИГС ✅", "МГТУ им. Баумана ✅", "МИРЕА ✅"]
