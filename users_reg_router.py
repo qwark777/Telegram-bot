@@ -4,13 +4,15 @@ import aiomysql
 from aiogram import Router, F, types
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
+import re
 
 
 from bot_functions import bot, create_inline_keyboard
-from clases import User, Constants
+from clases import User, Constants, Patterns
 from databases_functions import insert_sex_find, insert_age_find, insert_media, insert_type, print_registration_profile, \
-    insert_description, not_in_database, select_name, insert_full_name, insert_sex, insert_age, insert_uni
-from reply import start_keyboard, find_sex_keyboard, sex_keyboard, uni_keyboard, button_texts
+    insert_description, not_in_database, select_name, insert_full_name, insert_sex, insert_age, insert_uni, \
+    insert_uni_find
+from reply import start_keyboard, find_sex_keyboard, sex_keyboard, uni_keyboard, button_texts, age_back, age_find_back
 
 user_reg = Router()
 find_uni = defaultdict(lambda: deepcopy(button_texts))
@@ -94,25 +96,37 @@ async def get_find_sex_cal(callback_query: types.CallbackQuery, state: FSMContex
         if await insert_sex_find(callback_query.message.from_user.id, Constants.girl, connection_pool):
             await callback_query.message.answer("В боте произошла ошибка, напиши позже")
         else:
-            await callback_query.message.answer("Из какого ты университета?", reply_markup=uni_keyboard)
+            await callback_query.message.answer("Сколько тебе лет?", reply_markup=age_back)
             await state.set_state(User.age)
     elif index == 1:
         if await insert_sex_find(callback_query.message.from_user.id, Constants.guy, connection_pool):
             await callback_query.message.answer("В боте произошла ошибка, напиши позже")
         else:
-            await callback_query.message.answer("Из какого ты университета?", reply_markup=uni_keyboard)
+            await callback_query.message.answer("Сколько тебе лет?", reply_markup=age_back)
             await state.set_state(User.age)
     elif index == 3:
         if await insert_sex_find(callback_query.message.from_user.id, Constants.someone, connection_pool):
             await callback_query.message.answer("В боте произошла ошибка, напиши позже")
         else:
-            await callback_query.message.answer("Из какого ты университета?", reply_markup=uni_keyboard)
+            await callback_query.message.answer("Сколько тебе лет?", reply_markup=age_back)
             await state.set_state(User.age)
     elif index == 99:
         await callback_query.message.answer("Ты парень или девушка?", reply_markup=sex_keyboard)
         await state.set_state(User.sex)
     else:
         await callback_query.message.answer("Пожалуйста напиши мне 'парней', 'девушек' или 'без разницы' или выбери ответ на виртуальной клавиатуре")
+
+    await bot.answer_callback_query(callback_query.id)
+
+
+@user_reg.callback_query(User.age, lambda c: c.data and c.data.startswith('btn_05_'))
+async def get_age_cal(callback_query: types.CallbackQuery, state: FSMContext):
+    index = int(callback_query.data.split("_")[-1])
+    if index == 99:
+        await callback_query.message.answer("Кого будем искать?", reply_markup=find_sex_keyboard)
+        await state.set_state(User.find_sex)
+    else:
+        pass
 
     await bot.answer_callback_query(callback_query.id)
 
@@ -127,16 +141,31 @@ async def get_age(message: types.Message, state: FSMContext):
         elif await insert_age(message.from_user.id, int(message.text), connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже")
         else:
-            await message.answer("Какой возраст тебя интересует? Напиши диапазон в формате YY-YY")
+            await message.answer("Какой возраст тебя интересует? Напиши диапазон в формате YY-YY", reply_markup=age_find_back)
             await state.set_state(User.age_find)
     except ValueError:
         await message.answer("Введи возраст числом")
 
 
+@user_reg.callback_query(User.age_find, lambda c: c.data and c.data.startswith('btn_06_'))
+async def get_age_find_cal(callback_query: types.CallbackQuery, state: FSMContext):
+    index = int(callback_query.data.split("_")[-1])
+    if index == 99:
+        await callback_query.message.answer("Сколько тебе лет?", reply_markup=age_back)
+        await state.set_state(User.age)
+    else:
+        pass
+
+    await bot.answer_callback_query(callback_query.id)
+
+
 @user_reg.message(User.age_find, F.text)
 async def get_age_find(message: types.Message, state: FSMContext):
     try:
-        if int(message.text.split("-")[0]) > int(message.text.split("-")[1]):
+        if not re.match(fr"^[0-9]+-[0-9]+$", message.text):
+            print(re.match(fr"^[0-9]+-[0-9]+$", message.text))
+            await message.answer("Неправильный формат ввода. Напиши диапазон в формате YY-YY")
+        elif int(message.text.split("-")[0]) > int(message.text.split("-")[1]):
             await message.answer("Минимальный возраст должен быть не больше максимального")
         elif int(message.text.split("-")[1]) > 255:
             await message.answer("Слишком большой возраст")
@@ -144,7 +173,7 @@ async def get_age_find(message: types.Message, state: FSMContext):
                                    int(message.text.split("-")[1]), connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже")
         else:
-            await message.answer("Прикрепи свое фото. Максимум 4")
+            await message.answer("Из какого ты университета?", reply_markup=uni_keyboard)
             await state.set_state(User.university)
     except ValueError:
         await message.answer("Введи возраст числом")
@@ -152,35 +181,35 @@ async def get_age_find(message: types.Message, state: FSMContext):
         await message.answer("Введи возраст в формате YY-YY")
 
 
-@user_reg.callback_query(User.university, lambda c: c.data and c.data.startswith('btn_03_'))
+@user_reg.callback_query(User.university, lambda c: c.data and c.data.startswith('btn_04_'))
 async def get_uni(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
     if index == 1:
-        if await insert_uni(callback_query.message.from_user.id, Constants.MSU, connection_pool):
+        if await insert_uni(callback_query.from_user.id, Patterns.MSU, connection_pool):
             await callback_query.message.answer("В боте произошла ошибка, напиши позже")
         else:
             await callback_query.message.answer("Какой университет тебя интересует?", reply_markup=await create_inline_keyboard(button_texts))
             await state.set_state(User.find_university)
     elif index == 2:
-        if await insert_uni(callback_query.message.from_user.id, Constants.HSE, connection_pool):
+        if await insert_uni(callback_query.from_user.id, Patterns.HSE, connection_pool):
             await callback_query.message.answer("В боте произошла ошибка, напиши позже")
         else:
             await callback_query.message.answer("Какой университет тебя интересует?", reply_markup=await create_inline_keyboard(button_texts))
             await state.set_state(User.find_university)
     elif index == 3:
-        if await insert_uni(callback_query.message.from_user.id, Constants.RANEPA, connection_pool):
+        if await insert_uni(callback_query.from_user.id, Patterns.RANEPA, connection_pool):
             await callback_query.message.answer("В боте произошла ошибка, напиши позже")
         else:
             await callback_query.message.answer("Какой университет тебя интересует?", reply_markup=await create_inline_keyboard(button_texts))
             await state.set_state(User.find_university)
     elif index == 4:
-        if await insert_uni(callback_query.message.from_user.id, Constants.BMSTU, connection_pool):
+        if await insert_uni(callback_query.from_user.id, Patterns.BMSTU, connection_pool):
             await callback_query.message.answer("В боте произошла ошибка, напиши позже")
         else:
             await callback_query.message.answer("Какой университет тебя интересует?", reply_markup=await create_inline_keyboard(button_texts))
             await state.set_state(User.find_university)
     elif index == 5:
-        if await insert_uni(callback_query.message.from_user.id, Constants.MIREA, connection_pool):
+        if await insert_uni(callback_query.from_user.id, Patterns.MIREA, connection_pool):
             await callback_query.message.answer("В боте произошла ошибка, напиши позже")
         else:
             await callback_query.message.answer("Какой университет тебя интересует?", reply_markup=await create_inline_keyboard(button_texts))
@@ -188,21 +217,33 @@ async def get_uni(callback_query: types.CallbackQuery, state: FSMContext):
     elif index == 99:
         await callback_query.message.answer("Какой возраст тебя интересует? Напиши диапазон в формате YY-YY")
         await state.set_state(User.age_find)
-
     else:
         await callback_query.message.answer("Выбери ответ на виртуальной клавиатуре")
 
     await bot.answer_callback_query(callback_query.id)
 
 
-@user_reg.callback_query(User.find_university, lambda c: c.data and c.data.startswith('btn'))
+@user_reg.callback_query(User.find_university, lambda c: c.data and c.data.startswith('btn_07_'))
 async def keyboard_handler(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
     if index  == 100:
-        await callback_query.message.answer("Отправь свое фото или видео")
-        await state.set_state(User.image)
+        answer = 0
+
+        for i in reversed(find_uni[callback_query.from_user.id]):
+            if i[-1] == '✅':
+                answer += 1
+            answer <<= 1
+        answer >>= 1
+        del find_uni[callback_query.from_user.id]
+        if await insert_uni_find(callback_query.from_user.id, answer, connection_pool):
+            await callback_query.message.answer("В боте произошла ошибка, напиши позже")
+        else:
+            await callback_query.message.answer("Отправь свое фото или видео")
+            await state.set_state(User.image)
     elif index  == 99:
-        pass
+        find_uni[callback_query.from_user.id] = button_texts
+        await callback_query.message.answer("Из какого ты университета?", reply_markup=uni_keyboard)
+        await state.set_state(User.university)
     else:
         if find_uni[callback_query.from_user.id][index-1][-1] == '❌':
             char = '✅'
@@ -217,8 +258,19 @@ async def keyboard_handler(callback_query: types.CallbackQuery, state: FSMContex
     await bot.answer_callback_query(callback_query.id)
 
 
-@user_reg.message(User.image, F.content_type.in_([F.PHOTO, F.VIDEO]))
-async def get_album(message: types.Message, album: list[types.Message] = None, state: FSMContext = 0):
+@user_reg.callback_query(User.image, lambda c: c.data and c.data.startswith('btn_08_'))
+async def get_album_cal(callback_query: types.CallbackQuery, state: FSMContext):
+    index = int(callback_query.data.split("_")[-1])
+    if index == 99:
+        find_uni[callback_query.from_user.id] = button_texts
+        await callback_query.message.answer("Какой университет тебя интересует?", reply_markup=await create_inline_keyboard(button_texts))
+        await state.set_state(User.university)
+
+    await bot.answer_callback_query(callback_query.id)
+
+
+@user_reg.message(User.image, F.photo | F.video)
+async def get_album(message: types.Message,  album: list[types.Message] = None, state: FSMContext = 0):
     if not album:
         return
     counter = 1
@@ -266,5 +318,17 @@ async def get_desc(message: types.Message, state: FSMContext):
 @user_reg.message(User.wait, F.text)
 async def get_answer(message: types.Message, state: FSMContext):
     await message.answer("Отправь пожалуйста фото или видео")
+
+@user_reg.callback_query(User.wait, lambda c: c.data and c.data.startswith('btn_09_'))
+async def get_album_cal(callback_query: types.CallbackQuery, state: FSMContext):
+    index = int(callback_query.data.split("_")[-1])
+    if index == 1:
+        await callback_query.message.answer("Отлично! Перейдем к анкетам")
+        await state.set_state(User.find)
+    elif index == 2:
+        await callback_query.message.answer("Хорошо, давай переделаем анкету")
+        await callback_query.message.answer("Как тебя называть?")
+        await state.set_state(User.name)
+    await bot.answer_callback_query(callback_query.id)
 
 

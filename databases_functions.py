@@ -5,6 +5,7 @@ from aiogram import types, Bot
 from dotenv import load_dotenv, find_dotenv
 
 from clases import Constants
+from reply import wait_keyboard
 
 load_dotenv(find_dotenv())
 
@@ -198,7 +199,7 @@ async def print_registration_profile(id_: int, pool: aiomysql.pool.Pool, bot: Bo
 
                 await bot.send_media_group(-4513837603, media=media)
                 await bot.send_media_group(id_, media=media)
-                await bot.send_message(id_, text="Все верно?")
+                await bot.send_message(id_, text="Все верно?", reply_markup=wait_keyboard)
                 await conn.commit()
         return False
     except Exception as e:
@@ -212,6 +213,20 @@ async def insert_uni(id_: int, uni: int, pool: aiomysql.pool.Pool) -> bool:
             async with conn.cursor() as cursor:
                 string = os.getenv("INSERT_DATA_NUMBER")
                 string = string.format(ID=id_, DATA=uni, COLUMN='university')
+                await cursor.execute(string)
+                await conn.commit()
+        return False
+    except Exception as e:
+        print(e)
+        return True
+
+
+async def insert_uni_find(id_: int, uni: int, pool: aiomysql.pool.Pool) -> bool:
+    try:
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                string = os.getenv("INSERT_DATA_NUMBER")
+                string = string.format(ID=id_, DATA=uni, COLUMN='find_uni')
                 await cursor.execute(string)
                 await conn.commit()
         return False

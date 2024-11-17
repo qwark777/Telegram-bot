@@ -1,13 +1,15 @@
 import asyncio
 
 import aiomysql
+import aioredis
 from aiogram import Dispatcher
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from bot_functions import bot
 from clases import AlbumMiddleware
+from redis_functions import start_redis
 from sheduler import delete_inactive_users
-from user_find import users_find
+from user_find import users_find, create_user_find_router
 from users_reg_router import user_reg, create_user_router
 
 dp = Dispatcher()
@@ -18,6 +20,7 @@ dp.include_router(users_find)
 async def main():
     connection_pool = await aiomysql.create_pool(host='localhost', port=3306, user='root', password='12345678', db='msutndr', minsize=1, maxsize=100)
     await create_user_router(connection_pool)
+    await create_user_find_router(connection_pool)
     await bot.delete_webhook(drop_pending_updates=True)
     scheduler = AsyncIOScheduler()
     scheduler.add_job(delete_inactive_users, args=[connection_pool], trigger='cron', hour=0, minute=0)

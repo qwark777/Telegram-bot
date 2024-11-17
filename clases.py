@@ -38,13 +38,13 @@ class User(StatesGroup):
     description = State()
     wait = State()
     find = State()
+    like = State()
+
 
 class AlbumMiddleware(BaseMiddleware):
     album_data: dict = {}
-
-    def __init__(self, latency: Union[int, float] = 0.2) -> None:
+    def __init__(self, latency: Union[int, float] = 0.2):
         self.latency = latency
-
     async def __call__(self, handler: Callable[[Message, dict[str, Any]], Awaitable[Any]], message: Message, data: dict[str, Any]) -> Any:
         if message.media_group_id:
             try:
@@ -52,18 +52,13 @@ class AlbumMiddleware(BaseMiddleware):
             except KeyError:
                 self.album_data[message.media_group_id] = [message]
                 await asyncio.sleep(self.latency)
-
-            data['_is_last'] = True
-            data['album'] = self.album_data[message.media_group_id]
+                data['_is_last'] = True
+                data["album"] = self.album_data[message.media_group_id]
             res = await handler(message, data)
-
             if message.media_group_id and data.get("_is_last"):
                 del self.album_data[message.media_group_id]
                 del data['_is_last']
         else:
             data['album'] = [message]
             res = await handler(message, data)
-
         return res
-
-

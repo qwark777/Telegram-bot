@@ -41,11 +41,39 @@ find_sex_keyboard = InlineKeyboardMarkup(
     ]
 )
 
-back_keyboard = InlineKeyboardMarkup(
+age_back = InlineKeyboardMarkup(
     inline_keyboard=
     [
         [
-            InlineKeyboardButton(text='Назад 🔙', callback_data='btn_99')
+            InlineKeyboardButton(text='Назад 🔙', callback_data='btn_05_99')
+        ]
+    ]
+)
+
+age_find_back = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text='Назад 🔙', callback_data='btn_06_99')
+        ]
+    ]
+)
+
+media_back = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text='Назад 🔙', callback_data='btn_08_99')
+        ]
+    ]
+)
+
+wait_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text="Да ✅", callback_data="btn_09_01"),
+            InlineKeyboardButton(text="Нет ❌", callback_data="btn_09_02")
         ]
     ]
 )
