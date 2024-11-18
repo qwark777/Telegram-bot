@@ -1,13 +1,10 @@
 import asyncio
-
 import aiomysql
-import aioredis
 from aiogram import Dispatcher
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from bot_functions import bot
 from clases import AlbumMiddleware
-from redis_functions import start_redis
 from sheduler import delete_inactive_users
 from user_find import users_find, create_user_find_router
 from users_reg_router import user_reg, create_user_router

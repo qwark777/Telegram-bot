@@ -39,9 +39,9 @@ async def print_profile(message: types.Message, state: FSMContext):
         exclusion_query = ""
 
     query = f"""
-        SELECT * FROM profiles 
+        SELECT * FROM users 
         WHERE age BETWEEN {users_data[message.from_user.id][5]} AND {users_data[message.from_user.id][6]} 
-        AND university * {users_data[message.from_user.id][8]} != 0 
+        AND university & {users_data[message.from_user.id][8]} != 0 
         {exclusion_query}
         ORDER BY RAND() 
         LIMIT 1
@@ -50,7 +50,7 @@ async def print_profile(message: types.Message, state: FSMContext):
         async with connection_pool.acquire() as conn:
             async with conn.cursor() as cursor:
                 await cursor.execute(query)
-                users_data[message.from_user.id] = await cursor.fetchall()
+                form = await cursor.fetchall()
                 await conn.commit()
     except Exception as e:
         print(e)

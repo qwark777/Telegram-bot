@@ -39,6 +39,7 @@ class User(StatesGroup):
     wait = State()
     find = State()
     like = State()
+    returned = State()
 
 
 class AlbumMiddleware(BaseMiddleware):

@@ -91,3 +91,14 @@ uni_keyboard = InlineKeyboardMarkup(
 )
 
 button_texts = ["МГУ ✅", "ВШЭ ✅", "РАНХИГС ✅", "МГТУ им. Баумана ✅", "МИРЕА ✅"]
+
+
+returned_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text="Да ✅", callback_data="btn_10_01"),
+            InlineKeyboardButton(text="Нет ❌", callback_data="btn_10_02")
+        ]
+    ]
+)
