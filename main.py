@@ -1,15 +1,14 @@
 import asyncio
+
 import aiomysql
-from aiogram import Dispatcher
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from bot_functions import bot
+from bot_functions import bot, dp
 from clases import AlbumMiddleware
 from sheduler import delete_inactive_users
 from user_find import users_find, create_user_find_router
 from users_reg_router import user_reg, create_user_router
 
-dp = Dispatcher()
 dp.message.middleware(AlbumMiddleware())
 dp.include_router(user_reg)
 dp.include_router(users_find)

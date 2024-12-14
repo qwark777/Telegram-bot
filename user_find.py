@@ -1,56 +1,62 @@
-import os
 from collections import defaultdict
 
 import aiomysql
 from aiogram import Router, types
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.storage.memory import MemoryStorage
 
+from bot_functions import get_any_profile, bot, dislike, like, print_like_form, get_username, print_username
 from clases import User
-from redis_functions import get_watched_profiles
+from redis_functions import add_watched_profiles
 
+storage = MemoryStorage()
 users_find = Router()
 global connection_pool
 
-users_data = defaultdict(list)
+
 
 async def create_user_find_router(con_pool: aiomysql.pool.Pool):
     global connection_pool
     connection_pool = con_pool
 
 
-@users_find.message(User.find)
-async def print_profile(message: types.Message, state: FSMContext):
-    if not users_data[message.from_user.id]:
-        try:
-            async with connection_pool.acquire() as conn:
-                async with conn.cursor() as cursor:
-                    string = os.getenv("SELECT_ALL")
-                    string = string.format(ID=message.from_user.id)
-                    await cursor.execute(string)
-                    users_data[message.from_user.id] = await cursor.fetchall()
-                    await conn.commit()
-        except Exception as e:
-            print(e)
-    viewed_profiles = await get_watched_profiles(message.from_user.id)
-    if viewed_profiles:
-        placeholders = ', '.join(viewed_profiles)
-        exclusion_query = f"AND id NOT IN ({placeholders})"
-    else:
-        exclusion_query = ""
+@users_find.callback_query(User.find, lambda c: c.data and c.data.startswith('btn_11_'))
+async def print_find_profile(callback_query: types.CallbackQuery, state: FSMContext):
+    index = int(callback_query.data.split("_")[-1])
+    if index == 2:
+        await dislike(callback_query.from_user.id)
+        await get_any_profile(callback_query.from_user.id, connection_pool)
+    elif index == 1:
+        await like(callback_query.from_user.id)
+        await get_any_profile(callback_query.from_user.id, connection_pool)
+    await bot.answer_callback_query(callback_query.id)
 
-    query = f"""
-        SELECT * FROM users 
-        WHERE age BETWEEN {users_data[message.from_user.id][5]} AND {users_data[message.from_user.id][6]} 
-        AND university & {users_data[message.from_user.id][8]} != 0 
-        {exclusion_query}
-        ORDER BY RAND() 
-        LIMIT 1
-        """
+
+@users_find.callback_query(User.like_wait, lambda c: c.data and c.data.startswith('btn_13_'))
+async def wait_like_from(callback_query: types.CallbackQuery, state: FSMContext):
+    index = int(callback_query.data.split("_")[-1])
+    if index == 1:
+        await state.set_state(User.like)
+        await print_like_form(callback_query.from_user.id, connection_pool, state)
+    elif index == 2:
+        await state.set_state(User.find)
+        await get_any_profile(callback_query.from_user.id, connection_pool)
+    await bot.answer_callback_query(callback_query.id)
+
+
+
+@users_find.callback_query(User.like, lambda c: c.data and c.data.startswith('btn_11_'))
+async def like_from(callback_query: types.CallbackQuery, state: FSMContext):
+    index = int(callback_query.data.split("_")[-1])
     try:
-        async with connection_pool.acquire() as conn:
-            async with conn.cursor() as cursor:
-                await cursor.execute(query)
-                form = await cursor.fetchall()
-                await conn.commit()
+        if index == 1:
+            if await dislike(callback_query.from_user.id):
+                await callback_query.message.answer(f"Отлично, лови тег в Телеграме: {await get_username(callback_query.from_user.id)}")
+                await print_username(callback_query.from_user.id, connection_pool)
+            await print_like_form(callback_query.from_user.id, connection_pool, state)
+        elif index == 2:
+            await dislike(callback_query.from_user.id)
+            await print_like_form(callback_query.from_user.id, connection_pool, state)
+        await bot.answer_callback_query(callback_query.id)
     except Exception as e:
         print(e)

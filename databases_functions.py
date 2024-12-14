@@ -168,7 +168,7 @@ async def print_registration_profile(id_: int, pool: aiomysql.pool.Pool, bot: Bo
                 media = []
                 string = os.getenv("SELECT_DATA")
                 name = string.format(ID=id_, COLUMN='name')
-                await cursor.execute(name)
+                await cursor.execute(name)                                               # вот эту залупу нахуй удалить
                 result_name = await cursor.fetchall()
                 age = string.format(ID=id_, COLUMN='age')
                 await cursor.execute(age)
@@ -203,7 +203,7 @@ async def print_registration_profile(id_: int, pool: aiomysql.pool.Pool, bot: Bo
                 await conn.commit()
         return False
     except Exception as e:
-        print(e)
+        print(e, print_registration_profile.__name__)
         return True
 
 

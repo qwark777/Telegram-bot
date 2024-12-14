@@ -1,23 +1,24 @@
+import re
 from collections import defaultdict
 from copy import deepcopy
 import aiomysql
 from aiogram import Router, F, types
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-import re
 
-
-from bot_functions import bot, create_inline_keyboard
+from bot_functions import bot, create_inline_keyboard, get_any_profile, delete_messages
 from clases import User, Constants, Patterns
 from databases_functions import insert_sex_find, insert_age_find, insert_media, insert_type, print_registration_profile, \
     insert_description, not_in_database, select_name, insert_full_name, insert_sex, insert_age, insert_uni, \
     insert_uni_find
 from reply import start_keyboard, find_sex_keyboard, sex_keyboard, uni_keyboard, button_texts, age_back, age_find_back, \
     returned_keyboard
+from text_constants import HELLO_NOT, HELLO_YES
 
 user_reg = Router()
 find_uni = defaultdict(lambda: deepcopy(button_texts))
-del_messages = dict()
+global last
+
 global connection_pool
 
 
@@ -29,22 +30,21 @@ async def create_user_router(con_pool: aiomysql.pool.Pool):
 @user_reg.message(StateFilter(None), F.text)
 async def start(message: types.Message, state: FSMContext):
     if await not_in_database(message.from_user.id, connection_pool):
-        await message.answer("Привет, я вижу, что мы не знакомы. Хочешь зарегестрироваться?", reply_markup=start_keyboard)
-        del_messages[message.from_user.id] = message.message_id
+        await message.answer(HELLO_NOT, reply_markup=start_keyboard)
+        await state.set_state(User.registration)
     else:
         string = await select_name(message.from_user.id, connection_pool)
-        await message.answer("Привет, {}! Хочешь продолжить наше общение?".format(string), reply_markup=returned_keyboard)
+        await message.answer(HELLO_YES.format(string), reply_markup=returned_keyboard)
         await state.set_state(User.returned)
-        return
-    await state.set_state(User.registration)
 
 
-@user_reg.callback_query(User.registration, lambda c: c.data and c.data.startswith('btn_10_'))
+
+@user_reg.callback_query(User.returned, lambda c: c.data and c.data.startswith('btn_10_'))
 async def continue_registration_cal(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
     if index == 1:
-        pass
-        #показ анкеты
+        await state.set_state(User.find)
+        await get_any_profile(callback_query.from_user.id, connection_pool)
     elif index == 2:
         await callback_query.message.answer("Напиши тогда, как захочешь)")
         await state.clear()
@@ -75,9 +75,10 @@ async def get_name_mes(message: types.Message, state: FSMContext):
     else:
         if await insert_full_name(message.from_user.id, message.text, connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже")
-            await state.clear()
         else:
-            await message.answer("Ты парень или девушка?", reply_markup=sex_keyboard)
+            global last
+            last = await message.answer("Ты парень или девушка?", reply_markup=sex_keyboard)
+
             await state.set_state(User.sex)
 
 
@@ -94,6 +95,7 @@ async def get_sex_cal(callback_query: types.CallbackQuery, state: FSMContext):
         if await insert_sex(callback_query.from_user.id, Constants.guy, connection_pool):
             await callback_query.message.answer("В боте произошла ошибка, напиши позже")
         else:
+            await delete_messages(last, callback_query.from_user.id)
             await callback_query.message.answer("Кого будем искать?", reply_markup=find_sex_keyboard)
             await state.set_state(User.find_sex)
     elif index == 99:
@@ -101,7 +103,6 @@ async def get_sex_cal(callback_query: types.CallbackQuery, state: FSMContext):
         await state.set_state(User.name)
     else:
         await callback_query.message.answer("Пожалуйста напиши мне 'парень' или 'девушка' или выбери ответ на виртуальной клавиатуре")
-
     await bot.answer_callback_query(callback_query.id)
 
 
@@ -331,15 +332,15 @@ async def get_desc(message: types.Message, state: FSMContext):
             await state.set_state(User.wait)
 
 
-@user_reg.message(User.wait, F.text)
-async def get_answer(message: types.Message, state: FSMContext):
-    await message.answer("Отправь пожалуйста фото или видео")
 
 @user_reg.callback_query(User.wait, lambda c: c.data and c.data.startswith('btn_09_'))
 async def get_album_cal(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
     if index == 1:
         await callback_query.message.answer("Отлично! Перейдем к анкетам")
+
+        await get_any_profile(callback_query.from_user.id, connection_pool)
+
         await state.set_state(User.find)
     elif index == 2:
         await callback_query.message.answer("Хорошо, давай переделаем анкету")

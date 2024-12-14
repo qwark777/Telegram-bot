@@ -102,3 +102,24 @@ returned_keyboard = InlineKeyboardMarkup(
         ]
     ]
 )
+
+like_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text="🩷", callback_data="btn_11_01"),
+            InlineKeyboardButton(text="🚫", callback_data="btn_11_02")
+        ]
+    ]
+)
+
+
+like_wait_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text="Да ✅", callback_data="btn_13_01"),
+            InlineKeyboardButton(text="Продолжить просмотр анкет ❌", callback_data="btn_13_02")
+        ]
+    ]
+)

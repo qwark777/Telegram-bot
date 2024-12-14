@@ -7,9 +7,9 @@ from aiogram.types import Message
 
 
 class Constants:
-    guy = 1
-    girl =  0
-    someone = 2
+    guy = 2
+    girl =  1
+    someone = 3
     photo = 1
     video = 0
     MSU = 1
@@ -39,6 +39,7 @@ class User(StatesGroup):
     wait = State()
     find = State()
     like = State()
+    like_wait = State()
     returned = State()
 
 
