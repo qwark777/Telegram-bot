@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 import aiomysql
 from aiogram import Router, types
 from aiogram.fsm.context import FSMContext
@@ -7,12 +5,10 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from bot_functions import get_any_profile, bot, dislike, like, print_like_form, get_username, print_username
 from clases import User
-from redis_functions import add_watched_profiles
 
 storage = MemoryStorage()
 users_find = Router()
 global connection_pool
-
 
 
 async def create_user_find_router(con_pool: aiomysql.pool.Pool):
@@ -46,12 +42,12 @@ async def wait_like_from(callback_query: types.CallbackQuery, state: FSMContext)
 
 
 @users_find.callback_query(User.like, lambda c: c.data and c.data.startswith('btn_11_'))
-async def like_from(callback_query: types.CallbackQuery, state: FSMContext):
+async def like_form(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
     try:
         if index == 1:
             if await dislike(callback_query.from_user.id):
-                await callback_query.message.answer(f"Отлично, лови тег в Телеграме: {await get_username(callback_query.from_user.id)}")
+                await callback_query.message.answer(f"Отлично, лови тег в Телеграме: @{await get_username(callback_query.from_user.id)}")
                 await print_username(callback_query.from_user.id, connection_pool)
             await print_like_form(callback_query.from_user.id, connection_pool, state)
         elif index == 2:

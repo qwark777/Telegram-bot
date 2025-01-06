@@ -29,7 +29,10 @@ async def add_liked_profiles(_id: str, watched_id: int) -> None:
 async def get_liked_profiles(_id: str):
     redis = await aioredis.from_url("redis://localhost")
     try:
-        number = await redis.srandmember(_id)
+        number = await redis.spop(_id)
+        if number is None:
+            return None
         return number.decode('utf-8')
     finally:
         await redis.aclose()
+

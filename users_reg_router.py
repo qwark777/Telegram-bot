@@ -13,7 +13,7 @@ from databases_functions import insert_sex_find, insert_age_find, insert_media, 
     insert_uni_find
 from reply import start_keyboard, find_sex_keyboard, sex_keyboard, uni_keyboard, button_texts, age_back, age_find_back, \
     returned_keyboard
-from text_constants import HELLO_NOT, HELLO_YES
+from text_constants import HELLO_NOT, HELLO_YES, GET_NAME, GET_OUT
 
 user_reg = Router()
 find_uni = defaultdict(lambda: deepcopy(button_texts))
@@ -46,7 +46,7 @@ async def continue_registration_cal(callback_query: types.CallbackQuery, state: 
         await state.set_state(User.find)
         await get_any_profile(callback_query.from_user.id, connection_pool)
     elif index == 2:
-        await callback_query.message.answer("Напиши тогда, как захочешь)")
+        await callback_query.message.answer(GET_OUT)
         await state.clear()
     else:
         await callback_query.message.answer("Выбери ответ на виртуальной клавиатуре")
@@ -57,14 +57,13 @@ async def continue_registration_cal(callback_query: types.CallbackQuery, state: 
 async def continue_registration_cal(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
     if index == 1:
-        await callback_query.message.answer("Как тебя называть?")
+        await callback_query.message.answer(GET_NAME)
         await state.set_state(User.name)
     elif index == 2:
-        await callback_query.message.answer("Напиши тогда, как захочешь)")
+        await callback_query.message.answer(GET_OUT)
         await state.clear()
     else:
         await callback_query.message.answer("Выбери ответ на виртуальной клавиатуре")
-    #del
     await bot.answer_callback_query(callback_query.id)
 
 
@@ -347,5 +346,3 @@ async def get_album_cal(callback_query: types.CallbackQuery, state: FSMContext):
         await callback_query.message.answer("Как тебя называть?")
         await state.set_state(User.name)
     await bot.answer_callback_query(callback_query.id)
-
-

@@ -1,6 +1,5 @@
 import os
 from collections import defaultdict
-from email.errors import MessageDefect
 from typing import List, Union
 
 import aiomysql
@@ -96,7 +95,7 @@ async def like(self_id: int):
         state_with = FSMContext(storage=dp.storage, key=StorageKey(user_id=last_watched_form[self_id], bot_id=bot.id, chat_id=last_watched_form[self_id]))
         await state_with.set_state(User.like_wait)
         await add_watched_profiles(self_id, last_watched_form[self_id])
-        await add_liked_profiles(str(self_id) + 'l', last_watched_form[self_id])
+        await add_liked_profiles(str(last_watched_form[self_id]) + 'l', self_id)
     else:
         await bot.send_message(self_id, text="Время просмотра анкеты истекло")
 
@@ -153,7 +152,9 @@ async def get_username(chat_id: int):
 
 
 async def print_username(chat_id: int, connection_pool: aiomysql.pool.Pool):
-    chat = await bot.get_chat(chat_id)
+    chat = await bot.get_chat(last_watched_form[chat_id])
     username = chat.username
-    await bot.send_message(chat_id=chat_id, text=f"Ты понравился взаимно пользователю {select_name(chat_id, connection_pool)}\nВот тег в Телеграме: {username}")
+    await bot.send_message(chat_id=last_watched_form[chat_id], text=f"Ты понравился взаимно пользователю {await select_name(chat_id, connection_pool)}\nВот тег в Телеграме: @{username}")
     return username
+
+#хуй
