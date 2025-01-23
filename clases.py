@@ -41,6 +41,11 @@ class User(StatesGroup):
     like = State()
     like_wait = State()
     returned = State()
+    menu = State()
+
+
+class Admin:
+    admin_chat = -4759990399
 
 
 class AlbumMiddleware(BaseMiddleware):
@@ -64,3 +69,5 @@ class AlbumMiddleware(BaseMiddleware):
             data['album'] = [message]
             res = await handler(message, data)
         return res
+
+

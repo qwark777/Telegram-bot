@@ -3,8 +3,10 @@ from aiogram import Router, types
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from bot_functions import get_any_profile, bot, dislike, like, print_like_form, get_username, print_username
-from clases import User
+from bot_functions import get_any_profile, bot, dislike, like, print_like_form, get_username, print_username, anon_like, \
+    ban_profile
+from clases import User, Admin
+from reply import meny_keyboard
 
 storage = MemoryStorage()
 users_find = Router()
@@ -23,8 +25,22 @@ async def print_find_profile(callback_query: types.CallbackQuery, state: FSMCont
         await dislike(callback_query.from_user.id)
         await get_any_profile(callback_query.from_user.id, connection_pool)
     elif index == 1:
-        await like(callback_query.from_user.id)
+        await like(callback_query.from_user.id, connection_pool)
         await get_any_profile(callback_query.from_user.id, connection_pool)
+    elif index == 3:
+        await get_any_profile(callback_query.from_user.id, connection_pool)
+    elif index == 4:
+        await anon_like(callback_query.from_user.id)
+        await get_any_profile(callback_query.from_user.id, connection_pool)
+    elif index == 6:
+        await state.set_state(User.menu)
+        await callback_query.message.answer("Меню", reply_markup=meny_keyboard)
+    elif index == 5:
+        pass
+    elif index == 7:
+        await callback_query.message.answer('Жалоба принята ✅')
+        await ban_profile(callback_query.from_user.id, connection_pool)
+        await bot.send_message(Admin.admin_chat, )
     await bot.answer_callback_query(callback_query.id)
 
 

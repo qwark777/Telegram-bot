@@ -107,8 +107,20 @@ like_keyboard = InlineKeyboardMarkup(
     inline_keyboard=
     [
         [
-            InlineKeyboardButton(text="🩷", callback_data="btn_11_01"),
-            InlineKeyboardButton(text="🚫", callback_data="btn_11_02")
+            InlineKeyboardButton(text="Нравится 🩷", callback_data="btn_11_01"),
+            InlineKeyboardButton(text="Не нравится 🚫", callback_data="btn_11_02")
+
+        ],
+        [
+            InlineKeyboardButton(text="Отложить 🤷‍♂️", callback_data="btn_11_03"),
+            InlineKeyboardButton(text="Анонимный лайк 🖤", callback_data="btn_11_04"),
+        ],
+        [
+            InlineKeyboardButton(text="Сообщение 💌", callback_data="btn_11_05"),
+            InlineKeyboardButton(text="Меню 💤", callback_data="btn_11_06"),
+        ],
+        [
+            InlineKeyboardButton(text="Пожаловаться ‼️", callback_data="btn_11_07")
         ]
     ]
 )
@@ -120,6 +132,26 @@ like_wait_keyboard = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(text="Да ✅", callback_data="btn_13_01"),
             InlineKeyboardButton(text="Продолжить просмотр анкет ❌", callback_data="btn_13_02")
+        ]
+    ]
+)
+
+ban_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text="БАН ‼️", callback_data="btn_99_01"),
+            InlineKeyboardButton(text="НОРМ ✅", callback_data="btn_99_02")
+        ]
+    ]
+)
+
+meny_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text="Смотреть анкеты 👀", callback_data="btn_14_01"),
+            InlineKeyboardButton(text="Изменить анкету ✏️", callback_data="btn_14_02")
         ]
     ]
 )
