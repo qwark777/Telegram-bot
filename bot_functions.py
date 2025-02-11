@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
 from typing import List, Union
+import time
 
 import aiomysql
 from aiogram import Bot, Dispatcher
@@ -45,6 +46,7 @@ async def print_profile(self_id: int, form: List[Union[int, str]], flag: int): #
 
 
 async def get_any_profile(self_id: int, connection_pool: aiomysql.pool.Pool) -> None:
+
     if not users_data[self_id]:
         try:
             async with connection_pool.acquire() as conn:
@@ -62,7 +64,6 @@ async def get_any_profile(self_id: int, connection_pool: aiomysql.pool.Pool) -> 
         exclusion_query = f"AND id NOT IN ({placeholders})"
     else:
         exclusion_query = ""
-
     query = f"""
         SELECT * FROM users 
         WHERE id != {users_data[self_id][0]}
@@ -82,7 +83,7 @@ async def get_any_profile(self_id: int, connection_pool: aiomysql.pool.Pool) -> 
                 if form:
                     form = form[0]
                     last_watched_form[self_id] = form[0]
-                    await print_profile(self_id, form)
+                    await print_profile(self_id, form, Constants.find)
                 else:
                     await bot.send_message(self_id, text='Эта была последняя анкета. Поменяй критерии поиска или начни заново')
                 await conn.commit()
@@ -94,7 +95,8 @@ async def like(self_id: int, connection_pool: aiomysql.pool.Pool):
     last = last_watched_form[self_id]
     if last:
         an_l = await get_anon_liked_profiles(str(self_id) + 'a')
-        if str(last) in an_l:
+
+        if an_l and str(last) in an_l:
             await print_username(last, connection_pool)
             await bot.send_message(self_id, f"Отлично, лови тег в Телеграме: @{await get_username(self_id)}")
         else:

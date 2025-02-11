@@ -17,6 +17,9 @@ class Constants:
     RANEPA = 3
     BMSTU = 4
     MIREA = 5
+    reg = 1
+    find = 2
+    ban  = 3
 
 class Patterns:
     MSU = 0b1
@@ -42,6 +45,7 @@ class User(StatesGroup):
     like_wait = State()
     returned = State()
     menu = State()
+
 
 
 class Admin:

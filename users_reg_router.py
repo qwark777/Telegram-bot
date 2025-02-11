@@ -336,9 +336,7 @@ async def get_album_cal(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
     if index == 1:
         await callback_query.message.answer("Отлично! Перейдем к анкетам")
-
         await get_any_profile(callback_query.from_user.id, connection_pool)
-
         await state.set_state(User.find)
     elif index == 2:
         await callback_query.message.answer("Хорошо, давай переделаем анкету")
