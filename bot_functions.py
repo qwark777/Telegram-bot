@@ -84,6 +84,7 @@ async def get_any_profile(self_id: int, connection_pool: aiomysql.pool.Pool) -> 
                     form = form[0]
                     last_watched_form[self_id] = form[0]
                     await print_profile(self_id, form, Constants.find)
+
                 else:
                     await bot.send_message(self_id, text='Эта была последняя анкета. Поменяй критерии поиска или начни заново')
                 await conn.commit()
