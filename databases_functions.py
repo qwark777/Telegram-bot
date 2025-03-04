@@ -235,6 +235,7 @@ async def insert_uni_find(id_: int, uni: int, pool: aiomysql.pool.Pool) -> bool:
         return True
 
 async def ban(id_: int, pool: aiomysql.pool.Pool) -> bool:
+    print(id_)
     try:
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:

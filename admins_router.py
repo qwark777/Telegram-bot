@@ -15,11 +15,12 @@ async def create_admin_router(con_pool: aiomysql.pool.Pool):
 
 
 @admin_router.callback_query(lambda c: c.data and c.data.startswith('btn_99_'))
-async def wait_like_from(callback_query: types.CallbackQuery, state: FSMContext):
+async def ban_query(callback_query: types.CallbackQuery, state: FSMContext):
     if callback_query.message.chat.id == Admin.admin_chat:
         index = int(callback_query.data.split("_")[-1])
         if index == 1:
-            await ban()
+            id_ = callback_query.message.text.split("? id = ")
+            await ban(int(id_[-1]), connection_pool)
         elif index == 2:
             pass
     await bot.answer_callback_query(callback_query.id)

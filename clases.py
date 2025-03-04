@@ -45,7 +45,7 @@ class User(StatesGroup):
     like_wait = State()
     returned = State()
     menu = State()
-
+    wait_message = State()
 
 
 class Admin:

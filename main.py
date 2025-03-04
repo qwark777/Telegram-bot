@@ -24,11 +24,11 @@ dp.include_router(admin_router)
 async def main():
     # dp.startup.register(start_message)
     # dp.shutdown.register(end_message)
+    await init_redis()
     connection_pool = await aiomysql.create_pool(host='localhost', port=3306, user='root', password='12345678', db='msutndr', minsize=1, maxsize=100)
     await create_user_router(connection_pool)
     await create_user_find_router(connection_pool)
     await create_admin_router(connection_pool)
-    await init_redis()
     await bot.delete_webhook(drop_pending_updates=True)
 
     scheduler = AsyncIOScheduler()
@@ -37,16 +37,5 @@ async def main():
     await dp.start_polling(bot)
 
 
-
-def profile_bot():
-    profiler = cProfile.Profile()
-    profiler.enable()
-
-    # Запускаем ваш основной цикл
-    asyncio.run(main())
-
-    profiler.disable()
-    profiler.print_stats(sort='time')
-
 if __name__ == "__main__":
-    profile_bot()
+    asyncio.run(main())

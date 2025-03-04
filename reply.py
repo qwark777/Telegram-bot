@@ -150,8 +150,20 @@ meny_keyboard = InlineKeyboardMarkup(
     inline_keyboard=
     [
         [
-            InlineKeyboardButton(text="Смотреть анкеты 👀", callback_data="btn_14_01"),
+            InlineKeyboardButton(text="Анкеты 👀", callback_data="btn_14_01"),
             InlineKeyboardButton(text="Изменить анкету ✏️", callback_data="btn_14_02")
+        ],
+        [
+            InlineKeyboardButton(text="Отключить анкету 📴", callback_data="btn_14_03")
+        ]
+    ]
+)
+
+message_back = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text='Назад 🔙', callback_data='btn_15_99')
         ]
     ]
 )

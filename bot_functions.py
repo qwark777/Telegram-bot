@@ -1,7 +1,6 @@
 import os
 from collections import defaultdict
 from typing import List, Union
-import time
 
 import aiomysql
 from aiogram import Bot, Dispatcher
@@ -14,8 +13,8 @@ from dotenv import load_dotenv, find_dotenv
 from clases import Constants, User, Admin
 from databases_functions import select_name, ban
 from redis_functions import get_watched_profiles, add_watched_profiles, add_liked_profiles, get_liked_profiles, \
-    get_anon_liked_profiles
-from reply import like_keyboard, like_wait_keyboard
+    get_anon_liked_profiles, add_mes_liked_profiles, get_mes_liked_profiles
+from reply import like_keyboard, like_wait_keyboard, ban_keyboard, wait_keyboard
 
 load_dotenv(find_dotenv())
 bot = Bot(token=os.getenv("TOKEN"))
@@ -25,28 +24,44 @@ users_data = defaultdict(list)
 last_watched_form = defaultdict(lambda : 0)
 
 
-async def print_profile(self_id: int, form: List[Union[int, str]], flag: int): # 1 - при реге 2 - при показе анкет 3 - при бане 
+async def print_profile(self_id: int, form: List[Union[int, str]], flag: int, string: str = ''): # 1 - при реге 2 - при показе анкет 3 - при бане, 4 при показе понравившихся анкет
     text = str(os.getenv("FORM_PATTERN"))
     if form[18] == "":
         text = os.getenv("FORM_PATTERN_WITHOUT_DESC")
     text = text.format(NAME=form[1], AGE=form[4], DESC=form[18])
     media = list()
     if int(form[14]) == Constants.video:
-        media.append(types.InputMediaVideo(media=form[10], caption=text))
+        if flag == 4:
+            if string:
+                media.append(types.InputMediaVideo(media=form[10], caption="💌Сообщение от пользователя💌" + '\n\n' + string + '\n\n' + text))
+            else:
+                media.append(types.InputMediaVideo(media=form[10], caption=text))
+        else:
+            media.append(types.InputMediaVideo(media=form[10], caption=text))
     else:
-        media.append(types.InputMediaPhoto(media=form[10], caption=text))
+        if flag == 4:
+            if string:
+                media.append(types.InputMediaPhoto(media=form[10], caption="💌Сообщение от пользователя💌" + '\n\n' + string + '\n\n' + text))
+            else:
+                media.append(types.InputMediaPhoto(media=form[10], caption=text))
+
+        else:
+            media.append(types.InputMediaPhoto(media=form[10], caption=text))
+
     for i in range(2, form[9] + 1):
         if int(form[13 + i]) == Constants.video:
             media.append(types.InputMediaVideo(media=form[9 + i]))
         else:
             media.append(types.InputMediaPhoto(media=form[9 + i]))
-
-    await bot.send_media_group(self_id, media=media)
-    await bot.send_message(self_id, text='Как тебе анкета?', reply_markup=like_keyboard)
+    if flag == 3:
+        await bot.send_media_group(Admin.admin_chat, media=media)
+        await bot.send_message(Admin.admin_chat, text=f'Баним хуесоса? id = {str(last_watched_form[self_id])}', reply_markup=ban_keyboard)
+    else:
+        await bot.send_media_group(self_id, media=media)
+        await bot.send_message(self_id, text='Как тебе анкета?', reply_markup=[wait_keyboard, like_keyboard, None, like_keyboard][flag-1])
 
 
 async def get_any_profile(self_id: int, connection_pool: aiomysql.pool.Pool) -> None:
-
     if not users_data[self_id]:
         try:
             async with connection_pool.acquire() as conn:
@@ -84,7 +99,6 @@ async def get_any_profile(self_id: int, connection_pool: aiomysql.pool.Pool) -> 
                     form = form[0]
                     last_watched_form[self_id] = form[0]
                     await print_profile(self_id, form, Constants.find)
-
                 else:
                     await bot.send_message(self_id, text='Эта была последняя анкета. Поменяй критерии поиска или начни заново')
                 await conn.commit()
@@ -92,20 +106,21 @@ async def get_any_profile(self_id: int, connection_pool: aiomysql.pool.Pool) -> 
         print(e, get_any_profile.__name__, 2)
 
 
-async def like(self_id: int, connection_pool: aiomysql.pool.Pool):
+async def like(self_id: int, connection_pool: aiomysql.pool.Pool, text: str = ''):
     last = last_watched_form[self_id]
     if last:
-        an_l = await get_anon_liked_profiles(str(self_id) + 'a')
-
-        if an_l and str(last) in an_l:
+        an_l = await get_anon_liked_profiles(str(self_id) + 'a', str(last))
+        if an_l:
+            await dislike(self_id)
             await print_username(last, connection_pool)
-            await bot.send_message(self_id, f"Отлично, лови тег в Телеграме: @{await get_username(self_id)}")
+            await bot.send_message(last, f"Отлично, лови тег в Телеграме: @{await get_username(last)}")
         else:
             await bot.send_message(last_watched_form[self_id], text="Ты понравился одному пользователю. Покажем его анкету следующей", reply_markup=like_wait_keyboard)
             state_with = FSMContext(storage=dp.storage, key=StorageKey(user_id=last_watched_form[self_id], bot_id=bot.id, chat_id=last_watched_form[self_id]))
             await state_with.set_state(User.like_wait)
             await add_watched_profiles(self_id, last_watched_form[self_id])
             await add_liked_profiles(str(last_watched_form[self_id]) + 'l', self_id)
+            await add_mes_liked_profiles(str(last_watched_form[self_id]) + 'm', self_id, text)
     else:
         await bot.send_message(self_id, text="Время просмотра анкеты истекло")
 
@@ -161,8 +176,8 @@ async def print_like_form(self_id: int, connection_pool: aiomysql.pool.Pool, sta
                 await cursor.execute(query)
                 form = (await cursor.fetchall())
                 form = form[0]
-                last_watched_form[self_id] = form[0]
-                await print_profile(self_id, form)
+                string = await get_mes_liked_profiles(str(self_id) + 'm', str(number))
+                await print_profile(self_id, form, 4, string)
                 await conn.commit()
     except Exception as e:
         print(e, get_any_profile.__name__)
@@ -175,7 +190,7 @@ async def get_username(chat_id: int):
 
 
 async def print_username(chat_id: int, connection_pool: aiomysql.pool.Pool):
-    chat = await bot.get_chat(last_watched_form[chat_id])
+    chat = await bot.get_chat(chat_id)
     username = chat.username
     await bot.send_message(chat_id=last_watched_form[chat_id], text=f"Ты понравился взаимно пользователю {await select_name(chat_id, connection_pool)}\nВот тег в Телеграме: @{username}")
     return username
@@ -199,11 +214,31 @@ async def ban_profile(self_id: int, connection_pool: aiomysql.pool.Pool):
                     form = (await cursor.fetchall())
                     form = form[0]
                     last_watched_form[self_id] = form[0]
-                    await print_profile(self_id, form)
+                    await print_profile(self_id, form, 3)
                     await conn.commit()
         except Exception as e:
             print(e, get_any_profile.__name__)
-        await ban(self_id, connection_pool)
     else:
         await bot.send_message(self_id, text="Время просмотра анкеты истекло")
         return False
+
+
+async def like_mes(self_id: int, mes: str, connection_pool: aiomysql.pool.Pool):
+    last = last_watched_form[self_id]
+    if last:
+        an_l = await get_anon_liked_profiles(str(self_id) + 'a')
+        if an_l and str(last) in an_l:
+            await print_username(last, connection_pool)
+            await bot.send_message(self_id, f"Отлично, лови тег в Телеграме: @{await get_username(self_id)}")
+        else:
+            await bot.send_message(last_watched_form[self_id],
+                                   text="Ты понравился одному пользователю. Покажем его анкету следующей",
+                                   reply_markup=like_wait_keyboard)
+            state_with = FSMContext(storage=dp.storage,
+                                    key=StorageKey(user_id=last_watched_form[self_id], bot_id=bot.id,
+                                                   chat_id=last_watched_form[self_id]))
+            await state_with.set_state(User.like_wait)
+            await add_watched_profiles(self_id, last_watched_form[self_id])
+            await add_liked_profiles(str(last_watched_form[self_id]) + 'l', self_id)
+    else:
+        await bot.send_message(self_id, text="Время просмотра анкеты истекло")

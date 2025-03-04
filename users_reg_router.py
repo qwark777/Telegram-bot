@@ -12,7 +12,7 @@ from databases_functions import insert_sex_find, insert_age_find, insert_media, 
     insert_description, not_in_database, select_name, insert_full_name, insert_sex, insert_age, insert_uni, \
     insert_uni_find
 from reply import start_keyboard, find_sex_keyboard, sex_keyboard, uni_keyboard, button_texts, age_back, age_find_back, \
-    returned_keyboard, ban_keyboard
+    returned_keyboard
 
 
 user_reg = Router()
@@ -34,7 +34,7 @@ async def start(message: types.Message, state: FSMContext):
         await state.set_state(User.registration)
     else:
         string = await select_name(message.from_user.id, connection_pool)
-        await message.answer("Привет, {}! Хочешь продолжить наше общение?".format(string), reply_markup=returned_keyboard)
+        await message.answer("Привет, {}! Давно не виделись. Хочешь продолжить наше общение?".format(string), reply_markup=returned_keyboard)
         await state.set_state(User.returned)
 
 
