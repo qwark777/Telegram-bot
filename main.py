@@ -1,7 +1,6 @@
 import asyncio
 import aiomysql
-import cProfile
-import pstats
+
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from admins_router import create_admin_router, admin_router

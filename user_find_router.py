@@ -4,9 +4,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from bot_functions import get_any_profile, bot, dislike, like, print_like_form, get_username, print_username, anon_like, \
-    ban_profile, like_mes
-from clases import User, Admin
-from redis_functions import add_mes_liked_profiles
+    ban_profile, delete_message
+from clases import User
 from reply import meny_keyboard, message_back, like_keyboard
 
 storage = MemoryStorage()
@@ -22,6 +21,7 @@ async def create_user_find_router(con_pool: aiomysql.pool.Pool):
 @users_find.callback_query(User.find, lambda c: c.data and c.data.startswith('btn_11_'))
 async def print_find_profile(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
+    await delete_message(callback_query.message.chat.id, connection_pool)
     if index == 2:
         await dislike(callback_query.from_user.id)
         await get_any_profile(callback_query.from_user.id, connection_pool)

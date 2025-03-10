@@ -235,7 +235,6 @@ async def insert_uni_find(id_: int, uni: int, pool: aiomysql.pool.Pool) -> bool:
         return True
 
 async def ban(id_: int, pool: aiomysql.pool.Pool) -> bool:
-    print(id_)
     try:
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
@@ -247,3 +246,26 @@ async def ban(id_: int, pool: aiomysql.pool.Pool) -> bool:
     except Exception as e:
         print(e, ban.__name__)
         return True
+
+async def insert_mes(id_: int, mes_id: int, pool: aiomysql.pool.Pool) -> bool:
+    try:
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                string = os.getenv("INSERT_DATA_NUMBER")
+                string = string.format(ID=id_, DATA=mes_id, COLUMN='mes')
+                await cursor.execute(string)
+                await conn.commit()
+        return False
+    except Exception as e:
+        print(e, insert_mes.__name__)
+        return True
+
+async def get_mes(id_: int, pool: aiomysql.pool.Pool):
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            string = os.getenv("SELECT_DATA")
+            string = string.format(ID=id_, COLUMN='mes')
+            await cursor.execute(string)
+            result_set = await cursor.fetchall()
+            await conn.commit()
+        return int(result_set[0][0])

@@ -1,7 +1,7 @@
 import aiomysql
 from aiogram import Router, types
 from aiogram.fsm.context import FSMContext
-from bot_functions import bot, ban
+from bot_functions import bot, ban_profile
 from clases import Admin
 
 
@@ -20,7 +20,7 @@ async def ban_query(callback_query: types.CallbackQuery, state: FSMContext):
         index = int(callback_query.data.split("_")[-1])
         if index == 1:
             id_ = callback_query.message.text.split("? id = ")
-            await ban(int(id_[-1]), connection_pool)
+            await ban_profile(int(id_[-1]), connection_pool)
         elif index == 2:
             pass
     await bot.answer_callback_query(callback_query.id)

@@ -6,7 +6,7 @@ from aiogram import Router, F, types
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 
-from bot_functions import bot, create_inline_keyboard, get_any_profile, delete_messages
+from bot_functions import bot, create_inline_keyboard, get_any_profile, delete_markup, insert_mes_arr, delete_message
 from clases import User, Constants, Patterns
 from databases_functions import insert_sex_find, insert_age_find, insert_media, insert_type, print_registration_profile, \
     insert_description, not_in_database, select_name, insert_full_name, insert_sex, insert_age, insert_uni, \
@@ -17,7 +17,6 @@ from reply import start_keyboard, find_sex_keyboard, sex_keyboard, uni_keyboard,
 
 user_reg = Router()
 find_uni = defaultdict(lambda: deepcopy(button_texts))
-global last
 
 global connection_pool
 
@@ -29,19 +28,23 @@ async def create_user_router(con_pool: aiomysql.pool.Pool):
 
 @user_reg.message(StateFilter(None), F.text)
 async def start(message: types.Message, state: FSMContext):
+    await delete_message(message.from_user.id, connection_pool, 1)
     if await not_in_database(message.from_user.id, connection_pool):
-        await message.answer("Привет, я вижу, что мы не знакомы. Хочешь зарегестрироваться?", reply_markup=start_keyboard)
+        mes = await message.answer("Привет, я вижу, что мы не знакомы. Хочешь зарегестрироваться?", reply_markup=start_keyboard)
+        await insert_mes_arr(message.from_user.id, mes.message_id, connection_pool)
         await state.set_state(User.registration)
     else:
         string = await select_name(message.from_user.id, connection_pool)
-        await message.answer("Привет, {}! Давно не виделись. Хочешь продолжить наше общение?".format(string), reply_markup=returned_keyboard)
+        mes = await message.answer("Привет, {}! Давно не виделись. Хочешь продолжить наше общение?".format(string), reply_markup=returned_keyboard)
+        await insert_mes_arr(message.from_user.id, mes.message_id, connection_pool)
         await state.set_state(User.returned)
 
 
 
 @user_reg.callback_query(User.returned, lambda c: c.data and c.data.startswith('btn_10_'))
-async def continue_registration_cal(callback_query: types.CallbackQuery, state: FSMContext):
+async def continue_registration_calling(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
+    await delete_markup(callback_query.from_user.id, connection_pool)
     if index == 1:
         await state.set_state(User.find)
         await get_any_profile(callback_query.from_user.id, connection_pool)
@@ -56,8 +59,10 @@ async def continue_registration_cal(callback_query: types.CallbackQuery, state: 
 @user_reg.callback_query(User.registration, lambda c: c.data and c.data.startswith('btn_01_'))
 async def continue_registration_cal(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
+    await delete_markup(callback_query.from_user.id, connection_pool)
     if index == 1:
         await callback_query.message.answer("Как тебя называть?")
+        await insert_mes_arr(callback_query.message.from_user.id, 0, connection_pool)
         await state.set_state(User.name)
     elif index == 2:
         await callback_query.message.answer("Напиши тогда, как захочешь)")
@@ -75,26 +80,29 @@ async def get_name_mes(message: types.Message, state: FSMContext):
         if await insert_full_name(message.from_user.id, message.text, connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже")
         else:
-            global last
-            last = await message.answer("Ты парень или девушка?", reply_markup=sex_keyboard)
+            mes = await message.answer("Ты парень или девушка?", reply_markup=sex_keyboard)
+            await insert_mes_arr(message.from_user.id, mes.message_id, connection_pool)
             await state.set_state(User.sex)
 
 
 @user_reg.callback_query(User.sex, lambda c: c.data and c.data.startswith('btn_02_'))
 async def get_sex_cal(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
+    await delete_markup(callback_query.from_user.id, connection_pool)
     if index == 2:
         if await insert_sex(callback_query.from_user.id, Constants.girl, connection_pool):
             await callback_query.message.answer("В боте произошла ошибка, напиши позже")
         else:
-            await callback_query.message.answer("Кого будем искать?", reply_markup=find_sex_keyboard)
+            mes = await callback_query.message.answer("Кого будем искать?", reply_markup=find_sex_keyboard)
+            await insert_mes_arr(callback_query.message.from_user.id, mes.message_id, connection_pool)
             await state.set_state(User.find_sex)
     elif index == 1:
         if await insert_sex(callback_query.from_user.id, Constants.guy, connection_pool):
             await callback_query.message.answer("В боте произошла ошибка, напиши позже")
         else:
-            await delete_messages(last, callback_query.from_user.id)
-            await callback_query.message.answer("Кого будем искать?", reply_markup=find_sex_keyboard)
+            await delete_markup(callback_query.from_user.id, connection_pool)
+            mes = await callback_query.message.answer("Кого будем искать?", reply_markup=find_sex_keyboard)
+            await insert_mes_arr(callback_query.message.from_user.id, mes.message_id, connection_pool)
             await state.set_state(User.find_sex)
     elif index == 99:
         await callback_query.message.answer("Как тебя называть?")
@@ -106,12 +114,15 @@ async def get_sex_cal(callback_query: types.CallbackQuery, state: FSMContext):
 
 @user_reg.callback_query(User.find_sex, lambda c: c.data and c.data.startswith('btn_03_'))
 async def get_find_sex_cal(callback_query: types.CallbackQuery, state: FSMContext):
+    await delete_markup(callback_query.from_user.id, connection_pool)
+
     index = int(callback_query.data.split("_")[-1])
     if index == 2:
         if await insert_sex_find(callback_query.from_user.id, Constants.girl, connection_pool):
             await callback_query.message.answer("В боте произошла ошибка, напиши позже")
         else:
-            await callback_query.message.answer("Сколько тебе лет?", reply_markup=age_back)
+            mes = await callback_query.message.answer("Сколько тебе лет?", reply_markup=age_back)
+            await insert_mes_arr(callback_query.message.from_user.id, mes.message_id, connection_pool)
             await state.set_state(User.age)
     elif index == 1:
         if await insert_sex_find(callback_query.from_user.id, Constants.guy, connection_pool):
@@ -138,7 +149,8 @@ async def get_find_sex_cal(callback_query: types.CallbackQuery, state: FSMContex
 async def get_age_cal(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
     if index == 99:
-        await callback_query.message.answer("Кого будем искать?", reply_markup=find_sex_keyboard)
+        mes = await callback_query.message.answer("Кого будем искать?", reply_markup=find_sex_keyboard)
+        await insert_mes_arr(callback_query.message.from_user.id, mes.message_id, connection_pool)
         await state.set_state(User.find_sex)
     else:
         pass
@@ -156,7 +168,8 @@ async def get_age(message: types.Message, state: FSMContext):
         elif await insert_age(message.from_user.id, int(message.text), connection_pool):
             await message.answer("В боте произошла ошибка, напиши позже")
         else:
-            await message.answer("Какой возраст тебя интересует? Напиши диапазон в формате YY-YY", reply_markup=age_find_back)
+            mes = await message.answer("Какой возраст тебя интересует? Напиши диапазон в формате YY-YY", reply_markup=age_find_back)
+            await insert_mes_arr(message.from_user.id, mes.message_id, connection_pool)
             await state.set_state(User.age_find)
     except ValueError:
         await message.answer("Введи возраст числом")
@@ -166,11 +179,11 @@ async def get_age(message: types.Message, state: FSMContext):
 async def get_age_find_cal(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
     if index == 99:
-        await callback_query.message.answer("Сколько тебе лет?", reply_markup=age_back)
+        mes = await callback_query.message.answer("Сколько тебе лет?", reply_markup=age_back)
+        await insert_mes_arr(callback_query.message.from_user.id, mes.message_id, connection_pool)
         await state.set_state(User.age)
     else:
         pass
-
     await bot.answer_callback_query(callback_query.id)
 
 
