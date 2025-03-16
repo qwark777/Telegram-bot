@@ -21,7 +21,7 @@ async def create_user_find_router(con_pool: aiomysql.pool.Pool):
 @users_find.callback_query(User.find, lambda c: c.data and c.data.startswith('btn_11_'))
 async def print_find_profile(callback_query: types.CallbackQuery, state: FSMContext):
     index = int(callback_query.data.split("_")[-1])
-    await delete_message(callback_query.message.chat.id, connection_pool)
+    await delete_message(callback_query.message.chat.id, connection_pool, 1)
     if index == 2:
         await dislike(callback_query.from_user.id)
         await get_any_profile(callback_query.from_user.id, connection_pool)

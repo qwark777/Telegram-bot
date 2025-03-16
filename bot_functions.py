@@ -200,7 +200,7 @@ async def print_like_form(self_id: int, connection_pool: aiomysql.pool.Pool, sta
                 form = (await cursor.fetchall())
                 form = form[0]
                 string = await get_mes_liked_profiles(str(self_id) + 'm', str(number))
-                await print_profile(self_id, form, 4, string)
+                await print_profile(self_id, form, 4,connection_pool, string)
                 await conn.commit()
     except Exception as e:
         print(e, get_any_profile.__name__)
@@ -237,7 +237,7 @@ async def ban_profile(self_id: int, connection_pool: aiomysql.pool.Pool):
                     form = (await cursor.fetchall())
                     form = form[0]
                     last_watched_form[self_id] = form[0]
-                    await print_profile(self_id, form, 3)
+                    await print_profile(self_id, form, 3, connection_pool)
                     await conn.commit()
         except Exception as e:
             print(e, get_any_profile.__name__)
@@ -246,22 +246,3 @@ async def ban_profile(self_id: int, connection_pool: aiomysql.pool.Pool):
         return False
 
 
-async def like_mes(self_id: int, mess: str, connection_pool: aiomysql.pool.Pool):
-    last = last_watched_form[self_id]
-    if last:
-        an_l = await get_anon_liked_profiles(str(self_id) + 'a')
-        if an_l and str(last) in an_l:
-            await print_username(last, connection_pool)
-            await bot.send_message(self_id, f"Отлично, лови тег в Телеграме: @{await get_username(self_id)}")
-        else:
-            await bot.send_message(last_watched_form[self_id],
-                                   text="Ты понравился одному пользователю. Покажем его анкету следующей",
-                                   reply_markup=like_wait_keyboard)
-            state_with = FSMContext(storage=dp.storage,
-                                    key=StorageKey(user_id=last_watched_form[self_id], bot_id=bot.id,
-                                                   chat_id=last_watched_form[self_id]))
-            await state_with.set_state(User.like_wait)
-            await add_watched_profiles(self_id, last_watched_form[self_id])
-            await add_liked_profiles(str(last_watched_form[self_id]) + 'l', self_id)
-    else:
-        await bot.send_message(self_id, text="Время просмотра анкеты истекло")

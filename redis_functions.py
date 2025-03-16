@@ -77,3 +77,4 @@ async def get_mes_liked_profiles(_id: str, self_id: str) -> str:
         if a.startswith(self_id + '!iH!'):
             await redis.srem(_id, i)
             return a[len(self_id) + 4:]
+    return ''
